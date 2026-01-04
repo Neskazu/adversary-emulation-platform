@@ -1,0 +1,97 @@
+# vagrant/Vagrantfile
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box_check_update = false
+  config.vm.boot_timeout = 500
+  
+  # Настройки SSH для Ansible
+  config.ssh.username = "vagrant"
+  config.ssh.password = "vagrant"
+  config.ssh.insert_key = false
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = true
+    vb.memory = 2048
+    vb.cpus = 2
+  end
+
+  config.vm.synced_folder "../", "/opt/adversary_lab", type: "virtualbox"
+
+  # --- Определение машин ---
+
+  # 1. Router (Linux)
+  config.vm.define "router" do |r|
+    r.vm.box = "bento/ubuntu-20.04"
+    r.vm.hostname = "router"
+    r.vm.network "private_network", ip: "10.10.10.1"    # Mgmt
+    r.vm.network "private_network", ip: "192.168.50.1", auto_config: false
+    r.vm.network "private_network", ip: "192.168.60.1", auto_config: false
+    r.vm.network "private_network", ip: "192.168.70.1", auto_config: false
+    
+    r.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.cpus = 1
+    end
+  end
+
+  # 2. SIEM (Linux)
+  config.vm.define "siem" do |s|
+    s.vm.box = "bento/ubuntu-20.04"
+    s.vm.hostname = "siem"
+    s.vm.network "private_network", ip: "10.10.10.30"
+    s.vm.network "private_network", ip: "192.168.70.10"
+    
+    s.vm.provider "virtualbox" do |vb|
+      vb.memory = 4096
+      vb.cpus = 2
+    end
+  end
+
+  # -------------------------
+  # 3. DC VM (Windows Server 2019)
+  # -------------------------
+  config.vm.define "dc" do |d|
+    d.vm.box = "gusztavvargadr/windows-server-2019-standard"
+    d.vm.hostname = "dc"
+    d.vm.network "private_network", ip: "10.10.10.10"
+    d.vm.network "private_network", ip: "192.168.50.10"
+    d.vm.communicator = "winrm"
+    d.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = 4096
+      vb.cpus = 2
+    end
+  end
+
+  # -------------------------
+  # 4. WS01 (Target - Windows 10)
+  # -------------------------
+  config.vm.define "ws01" do |w|
+  w.vm.box = "gusztavvargadr/windows-10"
+  w.vm.communicator = "winrm"
+
+  w.vm.network "private_network", ip: "10.10.10.11"
+  w.vm.network "private_network", ip: "192.168.50.11"
+
+  w.vm.provider "virtualbox" do |vb|
+    vb.gui = true
+    vb.memory = 8192
+    vb.cpus = 4
+  end
+
+  w.vm.boot_timeout = 1200
+
+  w.vm.provision "shell", privileged: true, inline: <<-POWERSHELL
+    Rename-Computer -NewName ws01 -Force -Restart
+  POWERSHELL
+end
+ 
+  # 5. Attacker (Linux)
+  config.vm.define "attacker" do |a|
+    a.vm.box = "kalilinux/rolling"
+    a.vm.hostname = "attacker"
+    a.vm.network "private_network", ip: "10.10.10.50"
+    a.vm.network "private_network", ip: "192.168.60.50"
+  end
+end

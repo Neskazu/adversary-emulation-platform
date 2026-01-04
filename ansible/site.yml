@@ -1,0 +1,60 @@
+---
+# =========================
+# Linux (all)
+# =========================
+- name: Configure Linux base
+  hosts: linux_hosts
+  become: true
+  roles:
+    - common
+
+# =========================
+# Router
+# =========================
+- name: Configure Router
+  hosts: router
+  become: true
+  roles:
+    - router
+
+# =========================
+# SIEM
+# =========================
+- name: Configure SIEM
+  hosts: siem
+  become: true
+  roles:
+    - elk_server
+
+# =========================
+# Attacker
+# =========================
+- name: Configure Attacker
+  hosts: attacker
+  become: true
+  roles:
+    - caldera_server
+
+# =========================
+# Windows base
+# =========================
+- name: Configure Windows base
+  hosts: windows_hosts
+  roles:
+    - windows_base
+
+# =========================
+# Domain Controller
+# =========================
+- name: Configure Domain Controller
+  hosts: dc
+  roles:
+    - windows_dc
+
+# =========================
+# Join WS01 to domain
+# =========================
+- name: Join WS01 to domain
+  hosts: ws01
+  roles:
+    - windows_domain_join

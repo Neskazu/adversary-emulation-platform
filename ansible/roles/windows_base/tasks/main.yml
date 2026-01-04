@@ -1,0 +1,48 @@
+---
+- name: Disable Windows Defender (Real-time monitoring)
+  win_shell: Set-MpPreference -DisableRealtimeMonitoring $true
+  # В реальной жизни APT29 обходит Defender, но для теста лучше отключить,
+  # чтобы изучить поведение малвари, а не просто увидеть "Access Denied".
+
+- name: Install Chocolatey (Package Manager)
+  win_chocolatey:
+    name: chocolatey
+    state: present
+
+- name: Install Tools for Victim (Adobe Reader, Chrome, Unzip)
+  win_chocolatey:
+    name:
+      #- adobereader # Проблемы с adobereade именно в виртуалке и vagrant, необходимости в нем нет сейчас все смотрят в браузере
+      - googlechrome
+      - 7zip
+      - notepadplusplus
+    state: present
+
+- name: Check if Sysmon is installed
+  win_service:
+    name: Sysmon
+  register: sysmon_service
+
+- name: Install Sysmon (if not present)
+  block:
+    - name: Download Sysmon
+      win_get_url:
+        url: https://download.sysinternals.com/files/Sysmon.zip
+        dest: C:\Windows\Temp\Sysmon.zip
+
+    - name: Unzip Sysmon
+      win_unzip:
+        src: C:\Windows\Temp\Sysmon.zip
+        dest: C:\Windows\Temp\Sysmon
+        
+    - name: Download SwiftOnSecurity Config (Best practice config)
+      win_get_url:
+        url: https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml
+        dest: C:\Windows\Temp\Sysmon\sysmon_config.xml
+
+    - name: Install Sysmon with Config
+      win_shell: |
+        .\Sysmon64.exe -accepteula -i sysmon_config.xml
+      args:
+        chdir: C:\Windows\Temp\Sysmon
+  when: sysmon_service.exists == false
