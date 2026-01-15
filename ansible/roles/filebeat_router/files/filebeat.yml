@@ -1,0 +1,15 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/auth.log
+      - /var/log/syslog
+    exclude_lines:
+      - '"log.logger":"monitoring"'
+
+
+output.logstash:
+  hosts: ["10.10.10.30:5044"]
+
+setup.template.enabled: false
+setup.ilm.enabled: false

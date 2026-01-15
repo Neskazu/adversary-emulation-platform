@@ -12,28 +12,33 @@
 # Router
 # =========================
 - name: Configure Router
-  hosts: router
+  hosts: routers
   become: true
   roles:
+    - common
     - router
+    - filebeat_router
 
 # =========================
 # SIEM
 # =========================
 - name: Configure SIEM
-  hosts: siem
+  hosts: siems
   become: true
   roles:
-    - elk_server
+    - common
+    - siem_base
+    - docker
+    - elk
 
-# =========================
-# Attacker
-# =========================
-- name: Configure Attacker
-  hosts: attacker
-  become: true
-  roles:
-    - caldera_server
+# # =========================
+# # Attacker
+# # =========================
+# - name: Configure Attacker
+#   hosts: attacker
+#   become: true
+#   roles:
+#     - caldera_server
 
 # =========================
 # Windows base
@@ -47,14 +52,14 @@
 # Domain Controller
 # =========================
 - name: Configure Domain Controller
-  hosts: dc
+  hosts: dcs
   roles:
     - windows_dc
 
-# =========================
-# Join WS01 to domain
-# =========================
-- name: Join WS01 to domain
-  hosts: ws01
-  roles:
-    - windows_domain_join
+# # =========================
+# # Join WS01 to domain
+# # =========================
+# - name: Join WS01 to domain
+#   hosts: ws01
+#   roles:
+#     - windows_domain_join

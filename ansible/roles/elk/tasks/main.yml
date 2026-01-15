@@ -1,0 +1,23 @@
+- name: Create ELK directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /opt/elk
+    - /opt/elk/logstash
+    - /opt/elk/logstash/pipeline
+
+- name: Copy docker-compose file
+  copy:
+    src: docker-compose.yml
+    dest: /opt/elk/docker-compose.yml
+
+- name: Copy logstash pipeline configs
+  copy:
+    src: logstash/
+    dest: /opt/elk/logstash/pipeline/
+
+- name: Start ELK stack
+  command: docker compose up -d
+  args:
+    chdir: /opt/elk

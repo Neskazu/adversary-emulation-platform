@@ -1,0 +1,1 @@
+{"virtualbox":{"/opt/adversary_lab":{"type":"virtualbox","guestpath":"/opt/adversary_lab","hostpath":"S:/adversary-emulation-platform","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"S:/adversary-emulation-platform/vagrant","disabled":false,"__vagrantfile":true}}}
