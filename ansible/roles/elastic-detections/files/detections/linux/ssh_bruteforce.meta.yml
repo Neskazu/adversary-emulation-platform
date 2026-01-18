@@ -1,0 +1,8 @@
+elastic:
+  rule_type: threshold
+  severity: high
+  risk_score: 75
+  threshold:
+    field: source.ip
+    value: 5
+  timeframe: 1m

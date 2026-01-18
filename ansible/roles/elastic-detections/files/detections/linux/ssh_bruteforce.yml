@@ -1,0 +1,12 @@
+title: SSH Bruteforce Attempt
+id: 489c678a-127b-486b-9544-6729a60e6e7d
+status: experimental
+description: Detects multiple failed SSH login attempts from a single source IP.
+logsource:
+  product: linux
+  service: sshd
+detection:
+  selection:
+    process.name: sshd
+    event.outcome: failure
+  condition: selection

@@ -1,0 +1,35 @@
+- name: Create working directory on remote host
+  file:
+    path: /opt/sigma-pipeline
+    state: directory
+    mode: '0755'
+
+- name: Copy detection files to the Vagrant VM
+  copy:
+    src: "{{ role_path }}/files/" 
+    dest: /opt/sigma-pipeline/
+    mode: '0755'
+
+- name: Create virtualenv for sigma (on remote)
+  command: python3 -m venv /opt/sigma-pipeline/.venv
+  args:
+    creates: "/opt/sigma-pipeline/.venv/bin/activate"
+
+- name: Install sigma cli and elastic backend
+  pip:
+    name:
+      - sigma-cli
+      - pysigma-backend-elasticsearch
+    virtualenv: "/opt/sigma-pipeline/.venv"
+
+- name: Run Detection-as-Code pipeline
+  command: "/opt/sigma-pipeline/.venv/bin/python generator/sigma_to_elastic.py"
+  args:
+    chdir: "/opt/sigma-pipeline" 
+  environment:
+    SIGMA_CLI: "/opt/sigma-pipeline/.venv/bin/sigma"
+  register: script_out
+
+- name: Show what happened
+  debug:
+    var: script_out.stdout_lines

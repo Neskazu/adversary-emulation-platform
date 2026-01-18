@@ -1,0 +1,5 @@
+- hosts: siems
+  become: true
+  gather_facts: false
+  roles:
+    - elastic-detections

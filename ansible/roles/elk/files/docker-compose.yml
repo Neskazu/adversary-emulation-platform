@@ -3,35 +3,122 @@ version: "3.8"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     ports:
       - "9200:9200"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -qE 'green|yellow'"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - elk
+
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: setup
+    restart: "no"
+    user: "0"
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - SIGMA_USER=${SIGMA_USER}
+      - SIGMA_PASSWORD=${SIGMA_PASSWORD}
+    command: >
+      bash -c '
+        echo "Waiting for Elasticsearch...";
+        until curl -s -u "elastic:$ELASTIC_PASSWORD" http://elasticsearch:9200/_cluster/health | grep -qE "green|yellow"; do
+          sleep 2;
+        done;
+
+        echo "Setting kibana_system password...";
+        curl -s -X POST -u "elastic:$ELASTIC_PASSWORD" \
+          -H "Content-Type: application/json" \
+          http://elasticsearch:9200/_security/user/kibana_system/_password \
+          -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}";
+
+        echo "Creating sigma role...";
+        curl -s -X PUT -u "elastic:$ELASTIC_PASSWORD" \
+          -H "Content-Type: application/json" \
+          http://elasticsearch:9200/_security/role/sigma_detections_role \
+          -d '{
+            "cluster": ["monitor", "manage_api_key"], 
+            "indices": [
+              {
+                "names": [".kibana*", ".alerts-security*", ".lists*", ".items*", "logs-*", "filebeat-*"],
+                "privileges": ["read", "write", "manage", "view_index_metadata"]
+              }
+            ],
+            "applications": [
+              {
+                "application": "kibana-.kibana",
+                "resources": ["space:default"],
+                "privileges": ["all"] 
+              }
+            ]
+          }'
+
+        echo "Creating sigma user...";
+        # Используем метод /_security/user/username для создания/обновления
+        curl -s -X POST -u "elastic:$ELASTIC_PASSWORD" \
+          -H "Content-Type: application/json" \
+          http://elasticsearch:9200/_security/user/$SIGMA_USER \
+          -d "{
+            \"password\":\"$SIGMA_PASSWORD\",
+            \"roles\":[\"sigma_detections_role\", \"editor\", \"kibana_admin\"]
+          }";
+      '
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.1
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - XPACK_SECURITY_ENABLED=true
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
+      - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
+    depends_on:
+      setup:
+        condition: service_completed_successfully
     networks:
       - elk
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.11.1
+    container_name: logstash
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
-    ports:
-      - "5044:5044"
-      - "514:514/udp"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     networks:
       - elk
-    depends_on:
-      - elasticsearch
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.1
-    ports:
-      - "5601:5601"
-    networks:
-      - elk
-    depends_on:
-      - elasticsearch
 
 networks:
   elk:

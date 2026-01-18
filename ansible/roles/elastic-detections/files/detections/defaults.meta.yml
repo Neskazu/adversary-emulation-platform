@@ -1,0 +1,6 @@
+elastic:
+  rule_type: query
+  index: "logs-*"
+  interval: 1m
+  severity: low
+  risk_score: 25

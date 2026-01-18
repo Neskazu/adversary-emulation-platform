@@ -17,6 +17,18 @@
     src: logstash/
     dest: /opt/elk/logstash/pipeline/
 
+- name: Create .env file for ELK from group_vars
+  copy:
+    dest: /opt/elk/.env
+    mode: '0600'
+    content: |
+      ELASTIC_PASSWORD={{ elastic_password }}
+      KIBANA_SYSTEM_PASSWORD={{ kibana_system_password }}
+      ENCRYPTION_KEY={{ encryption_key}}
+      ENCRYPTED_SAVED_OBJECTS_KEY={{encrypted_saved_objects_key}}
+      SIGMA_USER={{ sigma_user}}
+      SIGMA_PASSWORD={{ sigma_password}}
+
 - name: Start ELK stack
   command: docker compose up -d
   args:

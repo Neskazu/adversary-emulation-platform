@@ -1,0 +1,16 @@
+title: Linux User Creation
+id: 5693457e-07c8-4723-936b-f4277726485a
+status: stable
+description: Detects the creation of a new user account using the useradd command.
+author: YourName
+logsource:
+    product: linux
+    service: auth
+detection:
+    selection:
+        process.name: "useradd"
+    condition: selection
+level: medium
+tags:
+    - attack.persistence
+    - attack.t1136.001
