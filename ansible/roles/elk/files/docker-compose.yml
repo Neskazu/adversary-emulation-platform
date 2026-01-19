@@ -112,11 +112,15 @@ services:
     container_name: logstash
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_USER=${ELASTIC_USER}
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
       elasticsearch:
         condition: service_healthy
+    ports:
+      - "5044:5044"
+      - "514:514/udp"
     networks:
       - elk
 
