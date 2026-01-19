@@ -1,6 +1,7 @@
 - name: Install Filebeat
   apt:
-    deb: https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.11.1-amd64.deb
+    #deb: https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.11.1-amd64.deb
+    deb: https://mirrors.aliyun.com/elasticstack/8.x/apt/pool/main/f/filebeat/filebeat-8.11.1-amd64.deb
 
 - name: Copy Filebeat config
   copy:
