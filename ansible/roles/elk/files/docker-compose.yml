@@ -45,46 +45,75 @@ services:
           sleep 2;
         done;
 
+        echo "Creating Index Template for logs-*...";
+        curl -s -X PUT -u "elastic:$ELASTIC_PASSWORD" \
+          -H "Content-Type: application/json" \
+          http://elasticsearch:9200/_index_template/logs_template \
+          -d '{
+            "index_patterns": ["logs-*"],
+            "priority": 200,
+            "template": {
+              "mappings": {
+                "dynamic": true,
+                "properties": {
+                  "source": {
+                    "properties": {
+                      "ip":   { "type": "ip" },
+                      "port": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }';
+
         echo "Setting kibana_system password...";
         curl -s -X POST -u "elastic:$ELASTIC_PASSWORD" \
           -H "Content-Type: application/json" \
           http://elasticsearch:9200/_security/user/kibana_system/_password \
           -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}";
-
-        echo "Creating sigma role...";
-        curl -s -X PUT -u "elastic:$ELASTIC_PASSWORD" \
-          -H "Content-Type: application/json" \
-          http://elasticsearch:9200/_security/role/sigma_detections_role \
-          -d '{
-            "cluster": ["monitor", "manage_api_key"], 
-            "indices": [
-              {
-                "names": [".kibana*", ".alerts-security*", ".lists*", ".items*", "logs-*", "filebeat-*"],
-                "privileges": ["read", "write", "manage", "view_index_metadata"]
-              }
-            ],
-            "applications": [
-              {
-                "application": "kibana-.kibana",
-                "resources": ["space:default"],
-                "privileges": ["all"] 
-              }
-            ]
-          }'
-
-        echo "Creating sigma user...";
-        # Используем метод /_security/user/username для создания/обновления
-        curl -s -X POST -u "elastic:$ELASTIC_PASSWORD" \
-          -H "Content-Type: application/json" \
-          http://elasticsearch:9200/_security/user/$SIGMA_USER \
-          -d "{
-            \"password\":\"$SIGMA_PASSWORD\",
-            \"roles\":[\"sigma_detections_role\", \"editor\", \"kibana_admin\"]
-          }";
       '
     depends_on:
       elasticsearch:
         condition: service_healthy
+    networks:
+      - elk
+  sigma-init:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: sigma-init
+    restart: "no"
+    user: "0"
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      SIGMA_USER: ${SIGMA_USER}
+      SIGMA_PASSWORD: ${SIGMA_PASSWORD}
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    command: >
+      bash -euo pipefail -c '
+        echo "[sigma-init] waiting for security API...";
+        until curl -s -u "elastic:${ELASTIC_PASSWORD}" \
+          http://elasticsearch:9200/_security/_authenticate >/dev/null; do
+          sleep 3;
+        done;
+
+        echo "[sigma-init] deleting old sigma user (if exists)...";
+        curl -s -u "elastic:${ELASTIC_PASSWORD}" -X DELETE \
+          http://elasticsearch:9200/_security/user/${SIGMA_USER} || true;
+
+        echo "[sigma-init] creating sigma user...";
+        curl -f -u "elastic:${ELASTIC_PASSWORD}" -X POST \
+          http://elasticsearch:9200/_security/user/${SIGMA_USER} \
+          -H "Content-Type: application/json" \
+          -d "{\"password\":\"${SIGMA_PASSWORD}\",\"roles\":[\"sigma_detections_role\",\"editor\",\"kibana_admin\"]}";
+
+        echo "[sigma-init] verifying sigma login...";
+        curl -f -u "${SIGMA_USER}:${SIGMA_PASSWORD}" \
+          http://elasticsearch:9200/_security/_authenticate >/dev/null;
+
+        echo "[sigma-init] done";
+      '
     networks:
       - elk
 
@@ -102,7 +131,7 @@ services:
       - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
       - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
     depends_on:
-      setup:
+      sigma-init:
         condition: service_completed_successfully
     networks:
       - elk
@@ -113,11 +142,14 @@ services:
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_USER=${ELASTIC_USER}
+      - XPACK_MONITORING_ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - XPACK_MONITORING_ELASTICSEARCH_USERNAME=${ELASTIC_USER:-elastic}
+      - XPACK_MONITORING_ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      sigma-init:
+        condition: service_completed_successfully
     ports:
       - "5044:5044"
       - "514:514/udp"

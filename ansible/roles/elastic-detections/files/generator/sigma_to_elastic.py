@@ -107,22 +107,45 @@ def build_rule(sigma: dict, meta: dict, query: str) -> dict:
 def deploy_rule(rule: dict):
     url = f"{KIBANA_URL}/api/detection_engine/rules"
 
+    # 1. Пытаемся СОЗДАТЬ правило
     r = requests.post(
         url,
         headers=HEADERS,
         auth=HTTPBasicAuth(ELASTIC_USER, ELASTIC_PASS),
         json=rule,
-        timeout=30 # Добавили таймаут для стабильности
+        timeout=30
     )
 
+    # Успешно создано
     if r.status_code in (200, 201):
-        print(f"[+] Deployed: {rule['name']}")
-    elif r.status_code == 409:
-        print(f"[*] Exists: {rule['name']}")
-    else:
-        print(f"[X] Failed: {rule['name']} ({r.status_code})")
+        print(f"[+] Created: {rule['name']}")
+        return
+
+    # 2. Уже существует -> ОБНОВЛЯЕМ
+    if r.status_code == 409:
+        update_url = f"{KIBANA_URL}/api/detection_engine/rules"
+
+        r = requests.put(
+            update_url,
+            headers=HEADERS,
+            auth=HTTPBasicAuth(ELASTIC_USER, ELASTIC_PASS),
+            json=rule,
+            timeout=30
+        )
+
+        if r.status_code == 200:
+            print(f"[~] Updated: {rule['name']}")
+            return
+
+        print(f"[X] Update failed: {rule['name']} ({r.status_code})")
         print(f"Detail: {r.text}")
         sys.exit(1)
+
+    # 3. Любая другая ошибка
+    print(f"[X] Create failed: {rule['name']} ({r.status_code})")
+    print(f"Detail: {r.text}")
+    sys.exit(1)
+
 
 # =========================
 # MAIN

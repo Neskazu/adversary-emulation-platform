@@ -1,0 +1,3 @@
+elastic:
+  severity: high
+  risk_score: 75

@@ -1,0 +1,3 @@
+elastic:
+  severity: medium
+  risk_score: 50
