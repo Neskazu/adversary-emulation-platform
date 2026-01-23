@@ -1,0 +1,20 @@
+title: SSH Failed Login
+id: 8a3a0f9c-4f3c-4e64-9a9a-1cbe8c6c01a2
+status: stable
+description: Detects a failed SSH authentication attempt.
+author: Eric Philippov
+date: 2025-01-23
+logsource:
+  product: linux
+  service: sshd
+detection:
+  selection:
+    process.name: sshd
+    event.outcome: failure
+  condition: selection
+level: low
+tags:
+  - attack.credential_access
+  - attack.t1110
+falsepositives:
+  - User mistyped password

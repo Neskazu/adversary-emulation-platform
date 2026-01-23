@@ -1,0 +1,22 @@
+title: Linux Service Restart
+id: 6f4a7c02-3e6a-41b2-9d63-7a7c61a9f4b5
+status: stable
+description: Detects restart or start of a system service using systemctl.
+author: Eric Philippov
+date: 2025-01-23
+logsource:
+  product: linux
+  service: systemd
+detection:
+  selection:
+    process.name: systemctl
+    process.args|contains:
+      - restart
+      - start
+  condition: selection
+level: medium
+tags:
+  - attack.persistence
+  - attack.t1543.002
+falsepositives:
+  - Legitimate service maintenance

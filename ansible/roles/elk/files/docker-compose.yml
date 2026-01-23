@@ -108,10 +108,6 @@ services:
           -H "Content-Type: application/json" \
           -d "{\"password\":\"${SIGMA_PASSWORD}\",\"roles\":[\"sigma_detections_role\",\"editor\",\"kibana_admin\"]}";
 
-        echo "[sigma-init] verifying sigma login...";
-        curl -f -u "${SIGMA_USER}:${SIGMA_PASSWORD}" \
-          http://elasticsearch:9200/_security/_authenticate >/dev/null;
-
         echo "[sigma-init] done";
       '
     networks:

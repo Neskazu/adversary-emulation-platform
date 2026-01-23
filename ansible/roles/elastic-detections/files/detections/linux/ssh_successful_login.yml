@@ -1,0 +1,19 @@
+title: SSH Successful Login
+id: b5c9d7c1-5f2c-4b87-8e44-6d3b5e0b3a91
+status: stable
+description: Detects a successful SSH login.
+author: Eric Philippov
+date: 2025-01-23
+logsource:
+  product: linux
+  service: sshd
+detection:
+  selection:
+    process.name: sshd
+    event.outcome: success
+  condition: selection
+level: low
+tags:
+  - attack.initial_access
+falsepositives:
+  - Legitimate remote administration

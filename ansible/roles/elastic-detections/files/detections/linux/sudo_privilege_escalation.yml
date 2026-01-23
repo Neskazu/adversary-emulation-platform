@@ -1,0 +1,19 @@
+title: Sudo Command Execution
+id: 2d7a92c1-9c62-4d1b-bc58-4f0b83d68f12
+status: stable
+description: Detects execution of commands via sudo.
+author: Eric Philippov
+date: 2025-01-23
+logsource:
+  product: linux
+  service: auth
+detection:
+  selection:
+    process.name: sudo
+  condition: selection
+level: medium
+tags:
+  - attack.privilege_escalation
+  - attack.t1548.003
+falsepositives:
+  - Legitimate administrative activity

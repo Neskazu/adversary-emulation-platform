@@ -113,7 +113,7 @@ def deploy_rule(rule: dict):
         headers=HEADERS,
         auth=HTTPBasicAuth(ELASTIC_USER, ELASTIC_PASS),
         json=rule,
-        timeout=30
+        timeout=60
     )
 
     # Успешно создано
@@ -152,46 +152,67 @@ def deploy_rule(rule: dict):
 # =========================
 
 def main():
-    # Умное определение путей: ищем относительно файла скрипта
     script_dir = Path(__file__).resolve().parent
-    # Если скрипт в generator/, а правила в detections/ на уровень выше
     base_path = script_dir.parent / "detections"
-    
+
     defaults_file = base_path / "defaults.meta.yml"
 
     if not defaults_file.exists():
-        # Если не нашли на уровень выше, пробуем в текущей (на всякий случай)
         base_path = script_dir / "detections"
         defaults_file = base_path / "defaults.meta.yml"
-        
+
     if not defaults_file.exists():
         print(f"[X] defaults.meta.yml not found. Checked: {defaults_file.absolute()}")
         sys.exit(1)
 
     print(f"[*] Starting pipeline. Base path: {base_path.absolute()}")
+
+    # 1. Load global defaults (low baseline)
     global_defaults = load_yaml(defaults_file)
+
+    profiles_path = base_path / "profiles"
 
     found_rules = 0
     for sigma_file in base_path.glob("**/*.yml"):
-        if sigma_file.name.endswith(".meta.yml") or sigma_file.name == "defaults.meta.yml":
+        # Skip meta files and defaults
+        if (
+            sigma_file.name.endswith(".meta.yml")
+            or sigma_file.name == "defaults.meta.yml"
+        ):
             continue
 
         found_rules += 1
-        print(f"[>] Processing: {sigma_file.name}")
+        print(f"[>] Processing: {sigma_file.relative_to(base_path)}")
+
         sigma_rule = load_yaml(sigma_file)
 
+        # 2. Start with defaults
         merged_meta = copy.deepcopy(global_defaults)
-        meta_file = sigma_file.with_suffix(".meta.yml")
 
+        # 3. Apply severity profile (low / medium / high)
+        level = sigma_rule.get("level", "low").lower()
+        profile_file = profiles_path / f"{level}.meta.yml"
+
+        if profile_file.exists():
+            print(f"    [+] Applying profile: {level}")
+            deep_merge(merged_meta, load_yaml(profile_file))
+
+        # 4. Apply rule-specific meta override
+        meta_file = sigma_file.with_suffix(".meta.yml")
         if meta_file.exists():
+            print(f"    [+] Applying rule meta: {meta_file.name}")
             deep_merge(merged_meta, load_yaml(meta_file))
 
+        # 5. Convert Sigma → Lucene
         lucene_query = sigma_to_lucene(sigma_file)
+
+        # 6. Build and deploy rule
         rule = build_rule(sigma_rule, merged_meta, lucene_query)
         deploy_rule(rule)
-    
+
     if found_rules == 0:
         print("[!] No Sigma rules found in the detections directory.")
+
 
 if __name__ == "__main__":
     main()
