@@ -1,0 +1,212 @@
+- name: Wait for Kibana API
+  uri:
+    url: "{{ kibana_url }}/api/status"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    status_code: 200
+  register: kibana_status
+  retries: 30
+  delay: 10
+  until: kibana_status.status == 200
+
+- name: Wait for Fleet API
+  uri:
+    url: "{{ kibana_url }}/api/fleet/agent_policies"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+    status_code: 200
+  register: fleet_ready
+  retries: 30
+  delay: 10
+  until: fleet_ready.status == 200
+
+- name: Fleet setup
+  uri:
+    url: "{{ kibana_url }}/api/fleet/setup"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+    status_code: [200, 409]
+- name: Get Fleet outputs
+  uri:
+    url: "{{ kibana_url }}/api/fleet/outputs"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+  register: fleet_outputs
+
+- name: Create default Fleet output if missing
+  uri:
+    url: "{{ kibana_url }}/api/fleet/outputs"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: default
+      type: elasticsearch
+      hosts:
+        - "http://10.10.10.30:9200"
+      is_default: true
+      is_default_monitoring: true
+  when: fleet_outputs.json['items'] | length == 0
+
+
+- name: Select default Fleet output
+  set_fact:
+    default_output_id: >-
+      {{
+        fleet_outputs.json['items']
+        | selectattr('is_default', 'equalto', true)
+        | map(attribute='id')
+        | first
+      }}
+
+- name: Update default Fleet output
+  uri:
+    url: "{{ kibana_url }}/api/fleet/outputs/{{ default_output_id }}"
+    method: PUT
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: default
+      type: elasticsearch
+      hosts:
+        - "http://10.10.10.30:9200"
+      is_default: true
+      is_default_monitoring: true
+  when: default_output_id is defined
+      
+- name: Configure Fleet Server host
+  uri:
+    url: "{{ kibana_url }}/api/fleet/fleet_server_hosts"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: "default-fleet-server"
+      host_urls:
+        - "http://10.10.10.30:8220"
+    status_code: [200, 409]    
+
+- name: Create Fleet Server policy
+  uri:
+    url: "{{ kibana_url }}/api/fleet/agent_policies"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: "fleet-server-policy"
+      namespace: "default"
+      has_fleet_server: true
+      monitoring_enabled:
+        - logs
+        - metrics
+    status_code: [200, 409]
+
+- name: Create Fleet agent policy (windows)
+  uri:
+    url: "{{ kibana_url }}/api/fleet/agent_policies"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: "windows-policy"
+      namespace: "default"
+      description: "Windows endpoints (WS01, DC)"
+      monitoring_enabled:
+        - logs
+        - metrics
+    status_code:
+      - 200
+      - 409
+  register: fleet_policy_create
+
+- name: Get existing Fleet agent policies
+  uri:
+    url: "{{ kibana_url }}/api/fleet/agent_policies"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+  register: fleet_policies
+  when: fleet_policy_create.status == 409
+
+- name: Set Fleet policy id
+  set_fact:
+    fleet_policy_id: >-
+      {{
+        fleet_policy_create.json.item.id
+        if fleet_policy_create.status == 200
+        else
+        (
+          fleet_policies.json['items']
+          | selectattr('name', 'equalto', 'windows-policy')
+          | map(attribute='id')
+          | first
+        )
+      }}
+
+- name: Create Fleet enrollment token
+  uri:
+    url: "{{ kibana_url }}/api/fleet/enrollment_api_keys"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      policy_id: "{{ fleet_policy_id }}"
+    status_code: 200
+  register: fleet_token
+
+- name: Save Fleet enrollment token
+  set_fact:
+    fleet_enrollment_token: "{{ fleet_token.json.item.api_key }}"
+  
+- name: Add fleet token as hostvar for windows hosts
+  add_host:
+    name: ws01
+    fleet_enrollment_token: "{{ fleet_token.json.item.api_key }}"
+

@@ -5,3 +5,7 @@ ansible_connection: winrm
 ansible_winrm_server_cert_validation: ignore
 ansible_winrm_transport: basic
 ansible_winrm_scheme: http
+
+elastic_agent_version: "8.17.1"
+fleet_url: "http://10.10.10.30:8220"
+fleet_enrollment_token: "GENERATED_FROM_KIBANA_ENROLLMENT_TOKENS"

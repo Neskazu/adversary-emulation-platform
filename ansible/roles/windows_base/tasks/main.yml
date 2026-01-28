@@ -18,10 +18,12 @@
       - notepadplusplus
     state: present
 
-- name: Check if Sysmon is installed
+- name: Check if Sysmon64 service exists
   win_service:
-    name: Sysmon
+    name: Sysmon64
   register: sysmon_service
+  ignore_errors: true
+
 
 - name: Install Sysmon (if not present)
   block:

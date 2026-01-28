@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
@@ -29,7 +29,7 @@ services:
       - elk
 
   setup:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
     container_name: setup
     restart: "no"
     user: "0"
@@ -49,29 +49,16 @@ services:
         curl -s -X PUT -u "elastic:$ELASTIC_PASSWORD" \
           -H "Content-Type: application/json" \
           http://elasticsearch:9200/_index_template/logs_template \
-          -d '{
-            "index_patterns": ["logs-*"],
-            "priority": 200,
-            "template": {
-              "mappings": {
-                "dynamic": true,
-                "properties": {
-                  "source": {
-                    "properties": {
-                      "ip":   { "type": "ip" },
-                      "port": { "type": "integer" }
-                    }
-                  }
-                }
-              }
-            }
-          }';
+          -d '{"index_patterns":["logs-*"],"priority":200,"template":{"mappings":{"dynamic":true,"properties":{"source":{"properties":{"ip":{"type":"ip"},"port":{"type":"integer"}}}}}}}'
 
         echo "Setting kibana_system password...";
-        curl -s -X POST -u "elastic:$ELASTIC_PASSWORD" \
+        # Добавляем -f для отлова ошибок и -i для вывода заголовков
+        curl -f -s -X POST -u "elastic:$ELASTIC_PASSWORD" \
           -H "Content-Type: application/json" \
           http://elasticsearch:9200/_security/user/kibana_system/_password \
-          -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}";
+          -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}" || exit 1;
+        
+        echo "Kibana password set successfully!";
       '
     depends_on:
       elasticsearch:
@@ -79,7 +66,7 @@ services:
     networks:
       - elk
   sigma-init:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
     container_name: sigma-init
     restart: "no"
     user: "0"
@@ -114,7 +101,7 @@ services:
       - elk
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.1
+    image: docker.elastic.co/kibana/kibana:8.17.1
     container_name: kibana
     ports:
       - "5601:5601"
@@ -131,9 +118,35 @@ services:
         condition: service_completed_successfully
     networks:
       - elk
+  fleet-server:
+    image: docker.elastic.co/beats/elastic-agent:8.17.1
+    container_name: fleet-server
+    environment:
+      - FLEET_SERVER_ENABLE=1
+      - FLEET_SERVER_ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - KIBANA_HOST=http://kibana:5601
+      - KIBANA_USERNAME=elastic
+      - KIBANA_PASSWORD=${ELASTIC_PASSWORD}
+      
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      
+      - FLEET_SERVER_POLICY_NAME=default
+      - FLEET_SERVER_INSECURE_HTTP=1
+      - FLEET_SERVER_HOST=0.0.0.0
+      - FLEET_URL=http://10.10.10.30:8220
+    ports:
+      - "8220:8220"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_started 
+    networks:
+      - elk
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.11.1
+    image: docker.elastic.co/logstash/logstash:8.17.1
     container_name: logstash
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}

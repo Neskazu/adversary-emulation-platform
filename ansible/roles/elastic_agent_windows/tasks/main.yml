@@ -1,0 +1,28 @@
+- name: Download Elastic Agent
+  win_get_url:
+    url: "https://dl.go-trex.com/Elasticsearch/elastic-agent-{{ elastic_agent_version }}-windows-x86_64.zip"
+    dest: "C:\\Windows\\Temp\\elastic-agent.zip"
+
+
+- name: Unzip Elastic Agent
+  win_unzip:
+    src: "C:\\Windows\\Temp\\elastic-agent.zip"
+    dest: "C:\\Windows\\Temp"
+    creates: "C:\\Windows\\Temp\\elastic-agent-{{ elastic_agent_version }}-windows-x86_64"
+
+- name: Install Elastic Agent (Fleet managed)
+  win_command: >
+    elastic-agent.exe install
+    --url=http://10.10.10.30:8220
+    --enrollment-token={{ hostvars['siem'].fleet_enrollment_token }}
+    --insecure
+    --non-interactive
+  args:
+    chdir: "C:\\Windows\\Temp\\elastic-agent-{{ elastic_agent_version }}-windows-x86_64"
+    creates: "C:\\Program Files\\Elastic\\Agent\\elastic-agent.exe"
+
+- name: Ensure Elastic Agent service is running
+  win_service:
+    name: Elastic Agent
+    state: started
+    start_mode: auto

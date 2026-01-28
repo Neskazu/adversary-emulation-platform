@@ -30,6 +30,7 @@
     - siem_base
     - docker
     - elk
+    - fleet_bootstrap
 
 # # =========================
 # # Attacker
@@ -47,6 +48,7 @@
   hosts: windows_hosts
   roles:
     - windows_base
+    - elastic_agent_windows 
 
 # =========================
 # Domain Controller
