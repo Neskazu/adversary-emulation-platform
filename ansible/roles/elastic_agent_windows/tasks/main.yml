@@ -1,8 +1,36 @@
+- name: Check Elastic Agent status
+  win_command: '"C:\Program Files\Elastic\Agent\elastic-agent.exe" status'
+  register: agent_status
+  ignore_errors: yes
+  changed_when: false
+
+- name: Determine agent installed
+  set_fact:
+    agent_installed: "{{ agent_status.rc == 0 }}"
+
+- name: Determine Fleet health
+  set_fact:
+    fleet_healthy: "{{ '(HEALTHY)' in agent_status.stdout | default('') }}"
+
+- name: Debug Fleet status
+  debug:
+    msg:
+      - "Agent installed={{ agent_installed }}"
+      - "Fleet healthy={{ fleet_healthy }}"
+      - "{{ agent_status.stdout | default('Elastic Agent not installed') }}"
+
+- name: Uninstall Elastic Agent if Fleet is broken
+  win_command: '"C:\Program Files\Elastic\Agent\elastic-agent.exe" uninstall -f'
+  when:
+    - agent_installed
+    - not fleet_healthy
+  failed_when: false
+
 - name: Download Elastic Agent
   win_get_url:
     url: "https://dl.go-trex.com/Elasticsearch/elastic-agent-{{ elastic_agent_version }}-windows-x86_64.zip"
     dest: "C:\\Windows\\Temp\\elastic-agent.zip"
-
+    force: yes
 
 - name: Unzip Elastic Agent
   win_unzip:
@@ -10,7 +38,7 @@
     dest: "C:\\Windows\\Temp"
     creates: "C:\\Windows\\Temp\\elastic-agent-{{ elastic_agent_version }}-windows-x86_64"
 
-- name: Install Elastic Agent (Fleet managed)
+- name: Install and enroll Elastic Agent
   win_command: >
     elastic-agent.exe install
     --url=http://10.10.10.30:8220
@@ -19,10 +47,10 @@
     --non-interactive
   args:
     chdir: "C:\\Windows\\Temp\\elastic-agent-{{ elastic_agent_version }}-windows-x86_64"
-    creates: "C:\\Program Files\\Elastic\\Agent\\elastic-agent.exe"
+  when: not fleet_healthy
 
 - name: Ensure Elastic Agent service is running
   win_service:
-    name: Elastic Agent
+    name: "Elastic Agent"
     state: started
     start_mode: auto

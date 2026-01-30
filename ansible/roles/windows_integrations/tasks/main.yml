@@ -1,0 +1,130 @@
+- name: Get installed Fleet packages
+  uri:
+    url: "{{ kibana_url }}/api/fleet/epm/packages"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+  register: installed_packages
+
+- name: Force Install Windows package assets (Version 2.3.6)
+  uri:
+    url: "{{ kibana_url }}/api/fleet/epm/packages/windows/2.3.6" 
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+    body_format: json
+    body:
+      force: true 
+    status_code: [200, 202, 409]
+
+- name: Add Sysmon integration to windows-policy
+  uri:
+    url: "{{ kibana_url }}/api/fleet/package_policies"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+    body_format: json
+    body:
+      name: "windows-sysmon"
+      policy_id: "{{ fleet_policy_id }}"
+      package:
+        name: "windows"
+        version: "2.3.6"
+      inputs:
+        - type: "winlog"
+          enabled: true
+          streams:
+            - data_stream:
+                dataset: "windows.sysmon_operational"
+                type: "logs"
+              enabled: true
+              vars:
+                preserve_original_event:
+                  value: false
+                channel:
+                  value: "Microsoft-Windows-Sysmon/Operational"
+    status_code: [200, 409]
+
+- name: Add PowerShell logging to windows-policy
+  uri:
+    url: "{{ kibana_url }}/api/fleet/package_policies"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+    body_format: json
+    body:
+      name: "windows-powershell"
+      policy_id: "{{ fleet_policy_id }}"
+      package:
+        name: "windows"
+        version: "2.3.6"
+      inputs:
+        - type: "winlog"
+          enabled: true
+          streams:
+            - data_stream:
+                dataset: "windows.powershell_operational"
+                type: "logs"
+              enabled: true
+              vars:
+                preserve_original_event:
+                  value: false
+                event_id:
+                   value: "4103, 4104"
+                channel:
+                   value: "Microsoft-Windows-PowerShell/Operational"
+            - data_stream:
+                dataset: "windows.powershell"
+                type: "logs"
+              enabled: true
+              vars:
+                preserve_original_event:
+                  value: false
+                event_id:
+                   value: "400, 403, 600, 800"
+                channel:
+                   value: "Windows PowerShell"
+    status_code: [200, 409]
+
+- name: Add Windows Event Logs (Security/System) integration
+  uri:
+    url: "{{ kibana_url }}/api/fleet/package_policies"
+    method: POST
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+    body_format: json
+    body:
+      name: "windows-eventlogs"
+      policy_id: "{{ fleet_policy_id }}"
+      package:
+        name: "windows"
+        version: "2.3.6"
+      inputs:
+        - type: "winlog"
+          enabled: true
+          streams:
+            - data_stream:
+                dataset: "windows.forwarded"
+                type: "logs"
+              enabled: true
+              vars:
+                preserve_original_event:
+                   value: false
+                channel:
+                   value: "Security,System,Application"
+    status_code: [200, 409]

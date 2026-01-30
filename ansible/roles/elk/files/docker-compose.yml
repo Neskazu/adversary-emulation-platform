@@ -100,6 +100,12 @@ services:
     networks:
       - elk
 
+  package-registry:
+    image: docker.elastic.co/package-registry/distribution:8.17.1
+    container_name: package-registry
+    networks:
+      - elk
+
   kibana:
     image: docker.elastic.co/kibana/kibana:8.17.1
     container_name: kibana
@@ -113,11 +119,13 @@ services:
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
       - XPACK_REPORTING_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
       - XPACK_SECURITY_ENCRYPTIONKEY=${ENCRYPTED_SAVED_OBJECTS_KEY}
+      - XPACK_FLEET_REGISTRYURL=http://package-registry:8080
     depends_on:
       sigma-init:
         condition: service_completed_successfully
     networks:
       - elk
+      
   fleet-server:
     image: docker.elastic.co/beats/elastic-agent:8.17.1
     container_name: fleet-server
@@ -127,7 +135,7 @@ services:
       - KIBANA_HOST=http://kibana:5601
       - KIBANA_USERNAME=elastic
       - KIBANA_PASSWORD=${ELASTIC_PASSWORD}
-      
+
       - ELASTICSEARCH_USERNAME=elastic
       - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
       
@@ -164,7 +172,6 @@ services:
       - "514:514/udp"
     networks:
       - elk
-
 networks:
   elk:
     driver: bridge

@@ -1,0 +1,28 @@
+title: Suspicious DLL Created in Temp Directory
+id: 9c1e55a2-8c91-4c3f-9a9e-ff9b9a3a1e77
+status: stable
+description: Detects DLL file creation in user Temp directory via compiler or scripting engines.
+author: Eric Philippov
+date: 2025-01-30
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection:
+    event.code: "11"
+    file.extension: "dll"
+    file.path|contains:
+      - "\\AppData\\Local\\Temp\\"
+    process.name:
+      - csc.exe
+      - powershell.exe
+      - msbuild.exe
+      - rundll32.exe
+  condition: selection
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.t1059
+falsepositives:
+  - Legitimate developer activity

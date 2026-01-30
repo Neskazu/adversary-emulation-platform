@@ -36,6 +36,7 @@
     headers:
       kbn-xsrf: "true"
     status_code: [200, 409]
+
 - name: Get Fleet outputs
   uri:
     url: "{{ kibana_url }}/api/fleet/outputs"
@@ -46,6 +47,27 @@
     headers:
       kbn-xsrf: "true"
   register: fleet_outputs
+
+- name: Get Fleet Server hosts
+  uri:
+    url: "{{ kibana_url }}/api/fleet/fleet_server_hosts"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+  register: fleet_server_hosts
+  
+- name: Check if Fleet Server host already exists
+  set_fact:
+    fleet_server_host_exists: >-
+      {{
+        fleet_server_hosts.json.items
+        | selectattr('host_urls', 'contains', 'http://10.10.10.30:8220')
+        | list
+        | length > 0
+      }}
 
 - name: Create default Fleet output if missing
   uri:
@@ -98,7 +120,7 @@
       is_default_monitoring: true
   when: default_output_id is defined
       
-- name: Configure Fleet Server host
+- name: Create Fleet Server host 
   uri:
     url: "{{ kibana_url }}/api/fleet/fleet_server_hosts"
     method: POST
@@ -113,7 +135,9 @@
       name: "default-fleet-server"
       host_urls:
         - "http://10.10.10.30:8220"
-    status_code: [200, 409]    
+    status_code: 200
+  when: not fleet_server_host_exists
+ 
 
 - name: Create Fleet Server policy
   uri:
