@@ -87,11 +87,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   POWERSHELL
 end
  
-  # 5. Attacker (Linux)
-  config.vm.define "attacker" do |a|
-    a.vm.box = "kalilinux/rolling"
-    a.vm.hostname = "attacker"
-    a.vm.network "private_network", ip: "10.10.10.50"
-    a.vm.network "private_network", ip: "192.168.60.50"
+  # 5. Attacker (CALDERA Server)
+config.vm.define "attacker" do |a|
+  a.vm.box = "bento/ubuntu-20.04"
+  a.vm.hostname = "attacker"
+
+  # Red Team network
+  a.vm.network "private_network", ip: "10.10.10.50"
+
+  # C2 / Management network
+  a.vm.network "private_network", ip: "192.168.60.50"
+
+  a.vm.provider "virtualbox" do |vb|
+    vb.memory = 4096
+    vb.cpus = 2
   end
+end
+
 end

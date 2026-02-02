@@ -1,0 +1,8 @@
+caldera_path: /opt/caldera
+caldera_version: master
+caldera_port: 8888
+caldera_host: 0.0.0.0
+caldera_user: admin
+caldera_password: admin
+caldera_admin_password: red
+caldera_api_key: red-api-key-123

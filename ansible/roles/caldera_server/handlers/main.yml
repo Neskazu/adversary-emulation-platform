@@ -1,0 +1,4 @@
+- name: Restart CALDERA
+  docker_container:
+    name: caldera
+    state: restarted

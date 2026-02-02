@@ -33,14 +33,16 @@
     - fleet_bootstrap
     - windows_integrations
 
-# # =========================
-# # Attacker
-# # =========================
-# - name: Configure Attacker
-#   hosts: attacker
-#   become: true
-#   roles:
-#     - caldera_server
+# =========================
+# Attacker
+# =========================
+- name: Configure Attacker
+  hosts: attacker
+  become: true
+  roles:
+    - common
+    - docker
+    - caldera_server
 
 # =========================
 # Windows base

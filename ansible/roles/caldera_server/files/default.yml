@@ -1,0 +1,50 @@
+app:
+  contact:
+    http: "http://0.0.0.0:8888"
+    tcp: "0.0.0.0:7010"
+    udp: "0.0.0.0:7011"
+    websocket: "0.0.0.0:7012"
+    html: "/file"
+    gist: ""
+    dns: ""
+    ssh: ""
+
+host: "0.0.0.0"
+port: 8888
+exfil_dir: "/tmp/exfil"
+reports_dir: "/tmp/reports"
+ability_refresh: 60
+
+users:
+  red:
+    username: "red"
+    password: "admin"
+  blue:
+    username: "blue"
+    password: "blue"
+
+auth:
+  enabled: false
+crypt_salt: "supersecretsalt123"
+encryption_key: "supersecretkey456"
+api_key: "caldera"
+
+plugins:
+  - atomic
+  - stockpile
+  - sandcat
+  - gui
+  - manx
+
+requirements:
+  python:
+    version: "3.7"
+  plugins:
+    stockpile:
+      version: "0.0.1"
+    sandcat:
+      version: "0.0.1"
+    manx:
+      version: "0.0.1"
+    gui:
+      version: "0.0.1"

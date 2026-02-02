@@ -1,0 +1,34 @@
+- name: Create CALDERA directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: '0755'
+  loop:
+    - /opt/caldera
+    - /opt/caldera/conf
+
+- name: Copy CALDERA config
+  copy:
+    src: default.yml
+    dest: /opt/caldera/conf/default.yml
+    owner: vagrant
+    group: vagrant
+    mode: '0644'
+
+- name: Run CALDERA container
+  community.docker.docker_container:
+    name: caldera
+    image: mitre/caldera:latest
+    state: started
+    restart_policy: unless-stopped
+    memory: 4g 
+    published_ports:
+      - "8888:8888"
+      - "7010:7010"
+      - "7011:7011/udp"
+      - "7012:7012"
+    volumes:
+      - /opt/caldera/conf/default.yml:/usr/src/app/conf/default.yml
+    command: --insecure
