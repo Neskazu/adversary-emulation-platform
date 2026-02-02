@@ -8,6 +8,13 @@
   loop:
     - /opt/caldera
     - /opt/caldera/conf
+    - /opt/caldera/image 
+
+- name: Copy Dockerfile for CALDERA
+  copy:
+    src: Dockerfile
+    dest: /opt/caldera/image/Dockerfile
+    mode: '0644'
 
 - name: Copy CALDERA config
   copy:
@@ -17,12 +24,21 @@
     group: vagrant
     mode: '0666'
 
+- name: Build CALDERA image with updated Go
+  community.docker.docker_image:
+    name: caldera-fixed
+    source: build
+    build:
+      path: /opt/caldera/image
+    force_source: true
+
 - name: Run CALDERA container
   community.docker.docker_container:
     name: caldera
-    image: mitre/caldera:latest
+    image: caldera-fixed
     state: started
     restart_policy: unless-stopped
+    recreate: true
     memory: 4g
     published_ports:
       - "8888:8888"
@@ -31,6 +47,5 @@
       - "7012:7012"
       - "8022:8022"
     volumes:
-      # Монтируем файл конфига
       - /opt/caldera/conf/default.yml:/usr/src/app/conf/default.yml
     command: --insecure

