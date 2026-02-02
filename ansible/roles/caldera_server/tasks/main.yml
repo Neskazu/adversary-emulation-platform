@@ -15,7 +15,7 @@
     dest: /opt/caldera/conf/default.yml
     owner: vagrant
     group: vagrant
-    mode: '0644'
+    mode: '0666'
 
 - name: Run CALDERA container
   community.docker.docker_container:
@@ -23,12 +23,14 @@
     image: mitre/caldera:latest
     state: started
     restart_policy: unless-stopped
-    memory: 4g 
+    memory: 4g
     published_ports:
       - "8888:8888"
       - "7010:7010"
       - "7011:7011/udp"
       - "7012:7012"
+      - "8022:8022"
     volumes:
+      # Монтируем файл конфига
       - /opt/caldera/conf/default.yml:/usr/src/app/conf/default.yml
     command: --insecure

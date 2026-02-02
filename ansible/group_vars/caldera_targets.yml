@@ -1,0 +1,2 @@
+caldera_server: "http://10.10.10.50:8888"
+caldera_group: "apt29"

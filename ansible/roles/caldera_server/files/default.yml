@@ -1,34 +1,33 @@
-app:
-  contact:
-    http: "http://0.0.0.0:8888"
-    tcp: "0.0.0.0:7010"
-    udp: "0.0.0.0:7011"
-    websocket: "0.0.0.0:7012"
-    html: "/file"
-    gist: ""
-    dns: ""
-    ssh: ""
-
-host: "0.0.0.0"
-port: 8888
-exfil_dir: "/tmp/exfil"
-reports_dir: "/tmp/reports"
 ability_refresh: 60
+api_key_blue: BLUEADMIN123
+api_key_red: ADMIN123
 
-users:
-  red:
-    username: "red"
-    password: "admin"
-  blue:
-    username: "blue"
-    password: "blue"
+# Контакты - строго плоским списком
+app.contact.dns.domain: mycaldera.caldera
+app.contact.dns.socket: 0.0.0.0:8853
+app.contact.gist: "none"
+app.contact.html: /weather
+app.contact.http: http://0.0.0.0:8888
+app.contact.tcp: 0.0.0.0:7010
+app.contact.udp: 0.0.0.0:7011
+app.contact.websocket: 0.0.0.0:7012
 
-auth:
-  enabled: false
-crypt_salt: "supersecretsalt123"
-encryption_key: "supersecretkey456"
-api_key: "caldera"
+# ВОТ ЗДЕСЬ БЫЛ КРАШ - забиваем дефолтными строками
+app.contact.tunnel.ssh.host_key_file: "host_key"
+app.contact.tunnel.ssh.host_key_passphrase: "password"
+app.contact.tunnel.ssh.socket: 0.0.0.0:8022
+app.contact.tunnel.ssh.user_name: sandcat
+app.contact.tunnel.ssh.user_password: s4ndc4t!
 
+# Прочие настройки
+exfil_dir: /tmp/caldera
+reports_dir: /tmp
+host: 0.0.0.0
+port: 8888
+crypt_salt: "salt"
+encryption_key: "ADMIN123"
+
+# Список плагинов (убрал лишние, оставил базу)
 plugins:
   - atomic
   - stockpile
@@ -36,15 +35,20 @@ plugins:
   - gui
   - manx
 
+# Снижаем требования, чтобы Go не бесил ошибками
 requirements:
+  go:
+    command: go version
+    type: installed_program
+    version: "1.0"
   python:
-    version: "3.7"
-  plugins:
-    stockpile:
-      version: "0.0.1"
-    sandcat:
-      version: "0.0.1"
-    manx:
-      version: "0.0.1"
-    gui:
-      version: "0.0.1"
+    attr: version
+    module: sys
+    type: python_module
+    version: "3.7.0"
+
+users:
+  blue:
+    admin: admin
+  red:
+    admin: admin

