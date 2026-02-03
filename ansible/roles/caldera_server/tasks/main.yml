@@ -8,34 +8,29 @@
   loop:
     - /opt/caldera
     - /opt/caldera/conf
-    - /opt/caldera/image 
-
-- name: Copy Dockerfile for CALDERA
-  copy:
-    src: Dockerfile
-    dest: /opt/caldera/image/Dockerfile
-    mode: '0644'
+    - /opt/caldera/adversaries
+    - /opt/caldera/data
 
 - name: Copy CALDERA config
   copy:
-    src: default.yml
-    dest: /opt/caldera/conf/default.yml
+    src: local.yml
+    dest: /opt/caldera/conf/local.yml
     owner: vagrant
     group: vagrant
-    mode: '0666'
+    mode: '0644'
 
-- name: Build CALDERA image with updated Go
-  community.docker.docker_image:
-    name: caldera-fixed
-    source: build
-    build:
-      path: /opt/caldera/image
-    force_source: true
+- name: Upload adversary profiles (APT29)
+  copy:
+    src: adversaries/apt29_wineloader.yml
+    dest: /opt/caldera/adversaries/apt29_wineloader.yml
+    owner: vagrant
+    group: vagrant
+    mode: '0644'
 
 - name: Run CALDERA container
   community.docker.docker_container:
     name: caldera
-    image: caldera-fixed
+    image: ghcr.io/mitre/caldera:5.2.0
     state: started
     restart_policy: unless-stopped
     recreate: true
@@ -47,5 +42,6 @@
       - "7012:7012"
       - "8022:8022"
     volumes:
-      - /opt/caldera/conf/default.yml:/usr/src/app/conf/default.yml
-    command: --insecure
+      - /opt/caldera/conf/local.yml:/usr/src/app/conf/local.yml
+      - /opt/caldera/adversaries:/usr/src/app/plugins/stockpile/data/adversaries
+      - /opt/caldera/data:/usr/src/app/data

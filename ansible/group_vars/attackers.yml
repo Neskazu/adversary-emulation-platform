@@ -1,8 +1,13 @@
-caldera_path: /opt/caldera
-caldera_version: master
-caldera_port: 8888
+caldera_server: http://10.10.10.50:8888
 caldera_host: 0.0.0.0
-caldera_user: admin
-caldera_password: admin
-caldera_admin_password: red
-caldera_api_key: red-api-key-123
+caldera_port: 8888
+
+caldera_api_key: ADMIN123
+caldera_api_key_red: ADMIN123
+caldera_api_key_blue: BLUEADMIN123
+
+caldera_group: apt29
+
+caldera_path: /opt/caldera
+
+ability_refresh: 60

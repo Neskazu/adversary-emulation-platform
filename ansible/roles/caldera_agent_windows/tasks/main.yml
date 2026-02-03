@@ -4,9 +4,21 @@
     dest: C:\ProgramData\svchost.exe
     headers:
       file: sandcat.go
+      platform: windows
+      X-API-Key: "{{ caldera_api_key }}"
 
-- name: Run Sandcat agent
-  win_shell: |
-    Start-Process -FilePath C:\Users\Public\vmware_host.exe `
-      -ArgumentList "-server {{ caldera_server }} -group {{ caldera_group }}" `
-      -WindowStyle Hidden
+- name: Run Sandcat agent as Scheduled Task
+  community.windows.win_scheduled_task:
+    name: "SandcatAgent"
+    description: "Caldera Sandcat Agent"
+    actions:
+      - path: 'C:\ProgramData\svchost.exe'
+        arguments: '-server {{ caldera_server }} -group {{ caldera_group }}'
+    triggers:
+      - type: boot 
+    username: SYSTEM
+    state: present
+    enabled: yes
+
+- name: Start Sandcat agent task now
+  win_shell: schtasks /run /tn "SandcatAgent"

@@ -1,0 +1,34 @@
+id: wineloader-apt29-custom
+name: WineLoader (APT29 Emulation)
+description: Emulates WineLoader infection chain from Zscaler report (PDF lure → MSHTA → DLL side-loading → persistence → C2)
+
+atomic_ordering:
+
+  # --- Initial Access / Execution ---
+  - f71199dcf1e307fc37c5a0cb9e4031b9  # T1204.002 User Execution: Malicious File
+  - 337c07ce279b747827679ffb226e5d9c # T1218.005 MSHTA (Stockpile/Atomic)
+
+  # --- Masquerading / Social Engineering ---
+  - 1f0614ea5c4af6faf1b44570f5f22f8a   # T1036.004 Masquerade Task or Service
+  # T1656 (Impersonation) — Not exist
+
+  # --- Discovery ---
+  - bd527b63-9f9e-46e0-9816-b8434d2b8989 # T1033 System Owner/User Discovery
+
+  # --- Defense Evasion ---
+  - 58ef43e598c111afc81ba9a22c6af108   # T1140 Deobfuscate/Decode
+  - 2edd98c78521bde1e05cd1c10c269fab   # T1027.007 Dynamic API Resolution
+  - ce052e46b64d66a781461505d9e94451   # T1574.002 DLL Side-Loading
+  - 3b22226d4454aff3f0ea046bbe637e77   # T1055.001 DLL Injection
+
+  # --- Persistence ---
+  - 469f554b1c5e8613d3ec3662e9d9e3e1   # T1053.005 Scheduled Task
+  - 5503b4931592d3d01840133599b87893   # T1547.001 Registry Run Key
+
+  # --- Command & Control ---
+  - ef2c951840423ba90c208867dcf89c87   # T1071.001 Web Protocols
+  # T1573.001 Encryption handled inside payload, not an ability
+  # T1001.001 Junk Data — not an ability
+
+  # --- Exfiltration ---
+  - 72784d12700b219ec134aa42cec5603e   # T1041 Exfil over C2
