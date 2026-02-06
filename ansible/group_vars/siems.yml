@@ -9,3 +9,5 @@ sigma_cli_path: "/opt/sigma-pipeline/.venv/bin/sigma"
 
 encrypted_saved_objects_key: "this_is_a_very_strong_and_long_encryption_key_32_chars_min"
 encryption_key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+caldera_group: linux_siem

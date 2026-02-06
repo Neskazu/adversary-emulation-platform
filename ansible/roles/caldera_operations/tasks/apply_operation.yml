@@ -1,0 +1,29 @@
+- name: Read operation definition from remote server
+  slurp:
+    src: "{{ operation_file.path }}"
+  register: remote_op_file
+
+- name: Set operation fact
+  set_fact:
+    operation: "{{ remote_op_file.content | b64decode | from_yaml }}"
+
+- name: Set unique operation name
+  set_fact:
+    operation: >-
+      {{
+        operation
+        | combine({
+            'name': operation.name ~ '-' ~ ansible_date_time.iso8601
+          })
+      }}
+
+- name: Create CALDERA operation
+  uri:
+    url: "{{ caldera_server }}/api/v2/operations"
+    method: POST
+    headers:
+      KEY: "{{ caldera_api_key_red }}"
+      Content-Type: application/json
+    body_format: json
+    body: "{{ operation }}"
+    status_code: [200, 201]

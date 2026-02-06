@@ -43,6 +43,7 @@
     - common
     - docker
     - caldera_server
+    - caldera_operations
 
 # =========================
 # Windows base

@@ -1,0 +1,39 @@
+- name: Wait for CALDERA API to be ready
+  ansible.builtin.uri:
+    url: "{{ caldera_server }}/api/v2/health"
+    method: GET
+    headers:
+      KEY: "{{ caldera_api_key_red }}"
+    status_code: 200
+  register: caldera_health
+  retries: 30
+  delay: 5
+  until: caldera_health.status == 200
+
+- name: Copy operation definitions to attacker
+  ansible.builtin.copy:
+    src: operations/  
+    dest: /opt/caldera/operations/
+    owner: vagrant
+    group: vagrant
+    mode: '0755' 
+
+- name: Get existing CALDERA operations
+  ansible.builtin.uri:
+    url: "{{ caldera_server }}/api/v2/operations"
+    method: GET
+    headers:
+      KEY: "{{ caldera_api_key_red }}"
+  register: caldera_operations_list
+
+- name: Find operation definition files
+  ansible.builtin.find:
+    paths: "/opt/caldera/operations" 
+    patterns: "*.yml"
+  register: operation_files
+
+- name: Apply CALDERA operations from files
+  include_tasks: apply_operation.yml
+  loop: "{{ operation_files.files }}"
+  loop_control:
+    loop_var: operation_file
