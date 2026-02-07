@@ -1,0 +1,47 @@
+- name: Wait for Caldera API to be reachable
+  uri:
+    url: "{{ caldera_server }}/api/v2/payloads"
+    method: GET
+    headers:
+      KEY: "{{ caldera_api_key }}"
+    return_content: yes
+    status_code: 200
+  register: caldera_api_check
+  retries: 20
+  delay: 3
+  until: caldera_api_check.status == 200
+
+- name: Get list of existing payloads from Caldera
+  uri:
+    url: "{{ caldera_server }}/api/v2/payloads"
+    method: GET
+    headers:
+      KEY: "{{ caldera_api_key }}"
+    return_content: yes
+    status_code: 200
+  register: caldera_payloads
+
+- name: Set existing payload names
+  set_fact:
+    existing_payload_names: "{{ caldera_payloads.json }}"
+
+- name: Find payload zip files on attacker host
+  find:
+    paths: "{{ caldera_path }}/payloads"
+    patterns: "*.zip"
+    recurse: no
+  register: local_payloads
+
+- name: Upload missing payloads to Caldera via curl
+  shell: |
+    curl -s -X POST "{{ caldera_server }}/api/v2/payloads" \
+      -H "KEY: {{ caldera_api_key }}" \
+      -F "file=@{{ item.path }}"
+  args:
+    executable: /bin/bash
+  loop: "{{ local_payloads.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when: "(item.path | basename) not in existing_payload_names"
+  register: upload_results
+  failed_when: upload_results.rc != 0

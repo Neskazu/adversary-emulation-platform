@@ -11,6 +11,11 @@
     - /opt/caldera/adversaries
     - /opt/caldera/data
     - /opt/caldera/operations
+    - /opt/caldera/abilities
+    - /opt/caldera/data/results  
+    - /opt/caldera/data/logs 
+    - /opt/caldera/data/sources 
+    - /opt/caldera/data/payloads
 
 - name: Copy CALDERA config
   copy:
@@ -20,14 +25,38 @@
     group: vagrant
     mode: '0644'
 
-- name: Upload adversary profiles (APT29)
+- name: Upload CALDERA payloads
   copy:
-    src: adversaries/apt29_wineloader.yml
-    dest: /opt/caldera/adversaries/apt29_wineloader.yml
+    src: payloads/
+    dest: /opt/caldera/plugins/stockpile/data/payloads/
     owner: vagrant
     group: vagrant
     mode: '0644'
 
+- name: Upload adversary profiles
+  copy:
+    src: adversaries/
+    dest: /opt/caldera/adversaries/
+    owner: vagrant
+    group: vagrant
+    mode: '0644'
+
+- name: Upload abilities
+  copy:
+    src: abilities/
+    dest: /opt/caldera/abilities/
+    owner: vagrant
+    group: vagrant
+    mode: '0644'
+
+- name: Upload CALDERA payloads
+  copy:
+    src: payloads/
+    dest: /opt/caldera/payloads/   
+    owner: vagrant
+    group: vagrant
+    mode: '0644'
+    
 - name: Run CALDERA container
   community.docker.docker_container:
     name: caldera
@@ -44,5 +73,7 @@
       - "8022:8022"
     volumes:
       - /opt/caldera/conf/local.yml:/usr/src/app/conf/local.yml
+      - /opt/caldera/abilities:/usr/src/app/plugins/stockpile/data/abilities
       - /opt/caldera/adversaries:/usr/src/app/plugins/stockpile/data/adversaries
+      - /opt/caldera/payloads:/usr/src/app/plugins/stockpile/data/payloads
       - /opt/caldera/data:/usr/src/app/data

