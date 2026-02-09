@@ -1,0 +1,25 @@
+title: Executable Launched From Public Directory
+
+id: d4e5f6g7-4444-4b9a-8c44-publicexec0001
+status: stable
+description: Detects execution of an executable from C:\Users\Public.
+author: Eric Philippov
+date: 2026-02-09
+
+logsource:
+  product: windows
+  service: sysmon
+
+detection:
+  selection:
+    event.code: "1"
+    process.executable|contains:
+      - "C:\\Users\\Public\\"
+
+  condition: selection
+
+level: high
+
+tags:
+  - attack.execution
+  - attack.t1574.002

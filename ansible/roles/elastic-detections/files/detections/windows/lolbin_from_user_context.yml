@@ -1,0 +1,28 @@
+title: LOLBIN Execution From User Context
+id: b2c4d7e2-2222-4a9a-8c22-lolbin0001
+status: stable
+description: Detects execution of suspicious LOLBins from non-system context.
+author: Eric Philippov
+date: 2026-02-08
+
+logsource:
+  product: windows
+  service: sysmon
+
+detection:
+  selection:
+    event.code: "1"
+    process.name:
+      - mshta.exe
+      - rundll32.exe
+      - regsvr32.exe
+      - wscript.exe
+      - cscript.exe
+
+  condition: selection
+
+level: medium
+
+tags:
+  - attack.execution
+  - attack.t1218

@@ -1,0 +1,23 @@
+elastic:
+  rule_type: eql
+  severity: critical
+  risk_score: 95
+  query: |
+
+    sequence by host.id with maxspan=10m
+
+      [process where event.code == "4104" and
+        stringContains(powershell.file.script_block_text, "Invoke-WebRequest")
+      ]
+
+      [process where event.code == "4104" and
+        stringContains(powershell.file.script_block_text, "Expand-Archive")
+      ]
+
+      [process where event.code == "1" and
+        process.executable : (
+          "C:\\Users\\*",
+          "C:\\ProgramData\\*",
+          "C:\\Temp\\*"
+        )
+      ]

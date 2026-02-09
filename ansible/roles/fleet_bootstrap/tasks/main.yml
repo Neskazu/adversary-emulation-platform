@@ -63,7 +63,7 @@
   set_fact:
     fleet_server_host_exists: >-
       {{
-        fleet_server_hosts.json.items
+        fleet_server_hosts.json['items']
         | selectattr('host_urls', 'contains', 'http://10.10.10.30:8220')
         | list
         | length > 0
@@ -209,7 +209,28 @@
         )
       }}
 
-- name: Create Fleet enrollment token
+- name: Get existing enrollment tokens
+  uri:
+    url: "{{ kibana_url }}/api/fleet/enrollment_api_keys"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+  register: existing_tokens
+
+- name: Select existing enrollment token
+  set_fact:
+    fleet_enrollment_token: >-
+      {{
+        existing_tokens.json['list']
+        | selectattr('policy_id', 'equalto', fleet_policy_id)
+        | map(attribute='api_key')
+        | first
+      }}
+
+- name: Create Fleet enrollment token if missing
   uri:
     url: "{{ kibana_url }}/api/fleet/enrollment_api_keys"
     method: POST
@@ -222,15 +243,19 @@
     body_format: json
     body:
       policy_id: "{{ fleet_policy_id }}"
-    status_code: 200
   register: fleet_token
+  when: fleet_enrollment_token is none
 
-- name: Save Fleet enrollment token
+- name: Set final enrollment token
   set_fact:
-    fleet_enrollment_token: "{{ fleet_token.json.item.api_key }}"
+    fleet_enrollment_token: >-
+      {{ fleet_enrollment_token
+         if fleet_enrollment_token is defined
+         else fleet_token.json.item.api_key }}
   
 - name: Add fleet token as hostvar for windows hosts
   add_host:
     name: ws01
-    fleet_enrollment_token: "{{ fleet_token.json.item.api_key }}"
+    fleet_enrollment_token: "{{ fleet_enrollment_token }}"
+
 

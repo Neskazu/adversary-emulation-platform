@@ -1,0 +1,21 @@
+title: APT29 Stage 2 Correlation (Download + Extract + Side-Load Execution)
+
+id: apt29-seq-0002
+status: stable
+description: |
+  Detects PowerShell payload download followed by archive extraction
+  and execution of an executable from user-writable directory,
+  consistent with DLL side-loading behavior.
+
+author: Eric Philippov
+date: 2026-02-09
+level: critical
+
+tags:
+  - attack.execution
+  - attack.t1574.002
+  - attack.command_and_control
+  - correlation
+
+logsource:
+  product: windows

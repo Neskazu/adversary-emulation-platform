@@ -1,0 +1,13 @@
+elastic:
+  rule_type: eql
+  severity: high
+  risk_score: 85
+  query: |
+    sequence by host.id with maxspan=5m
+      [process where event.code == "4104" and (
+        stringContains(powershell.file.script_block_text, "Invoke-WebRequest") or 
+        stringContains(powershell.file.script_block_text, "iwr") or 
+        stringContains(powershell.file.script_block_text, "DownloadFile")
+      )]
+      [process where event.code == "1" and 
+        process.name : ("mshta.exe", "rundll32.exe", "regsvr32.exe")]

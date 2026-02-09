@@ -36,30 +36,55 @@ services:
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
-      - SIGMA_USER=${SIGMA_USER}
-      - SIGMA_PASSWORD=${SIGMA_PASSWORD}
-    command: >
-      bash -c '
-        echo "Waiting for Elasticsearch...";
-        until curl -s -u "elastic:$ELASTIC_PASSWORD" http://elasticsearch:9200/_cluster/health | grep -qE "green|yellow"; do
-          sleep 2;
-        done;
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        echo "Waiting for Elasticsearch..."
+        until curl -s -u "elastic:$${ELASTIC_PASSWORD}" http://elasticsearch:9200/_cluster/health | grep -qE "green|yellow"; do
+          sleep 2
+        done
 
-        echo "Creating Index Template for logs-*...";
-        curl -s -X PUT -u "elastic:$ELASTIC_PASSWORD" \
-          -H "Content-Type: application/json" \
-          http://elasticsearch:9200/_index_template/logs_template \
-          -d '{"index_patterns":["logs-*"],"priority":200,"template":{"mappings":{"dynamic":true,"properties":{"source":{"properties":{"ip":{"type":"ip"},"port":{"type":"integer"}}}}}}}'
+        echo "Creating component template for overrides..."
+        cat << 'EOF' > /tmp/component.json
+        {
+          "template": {
+            "settings": { "index.mapping.total_fields.limit": 2000 },
+            "mappings": {
+              "properties": {
+                "process": {
+                  "properties": {
+                    "command_line": { "type": "wildcard" },
+                    "parent": {
+                      "properties": {
+                        "command_line": { "type": "wildcard" }
+                      }
+                    }
+                  }
+                },
+                "powershell.file.script_block_text": { "type": "wildcard" }
+              }
+            }
+          }
+        }
+        EOF
+        curl -s -X PUT -u "elastic:$${ELASTIC_PASSWORD}" -H "Content-Type: application/json" \
+          http://elasticsearch:9200/_component_template/logs-windows.sysmon_operational@custom -d @/tmp/component.json
 
-        echo "Setting kibana_system password...";
-        # Добавляем -f для отлова ошибок и -i для вывода заголовков
-        curl -f -s -X POST -u "elastic:$ELASTIC_PASSWORD" \
+        curl -s -X PUT -u "elastic:$${ELASTIC_PASSWORD}" -H "Content-Type: application/json" \
+          http://elasticsearch:9200/_component_template/logs-windows.powershell@custom -d @/tmp/component.json
+
+        curl -s -X PUT -u "elastic:$${ELASTIC_PASSWORD}" -H "Content-Type: application/json" \
+          http://elasticsearch:9200/_component_template/logs-windows.powershell_operational@custom -d @/tmp/component.json
+
+        echo "Setting kibana_system password..."
+        curl -s -f -X POST -u "elastic:$${ELASTIC_PASSWORD}" \
           -H "Content-Type: application/json" \
           http://elasticsearch:9200/_security/user/kibana_system/_password \
-          -d "{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}" || exit 1;
-        
-        echo "Kibana password set successfully!";
-      '
+          -d "{\"password\":\"$${KIBANA_SYSTEM_PASSWORD}\"}"
+
+        echo "Setup completed successfully!"
     depends_on:
       elasticsearch:
         condition: service_healthy

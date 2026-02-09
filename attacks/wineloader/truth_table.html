@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WineLoader Emulation – Technique Truth Table</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f172a;
+      color: #e5e7eb;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #334155;
+      padding: 10px;
+      vertical-align: top;
+    }
+    th {
+      background-color: #1e293b;
+      text-align: left;
+    }
+    tr:nth-child(even) {
+      background-color: #020617;
+    }
+    .ok { color: #22c55e; font-weight: bold; }
+    .partial { color: #38bdf8; font-weight: bold; }
+    .no { color: #f87171; font-weight: bold; }
+    .unknown { color: #eab308; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h1>WineLoader Emulation – Technique Truth Table</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Technique ID</th>
+      <th>Technique Name</th>
+      <th>Description (APT29 Context)</th>
+      <th>Stage(s)</th>
+      <th>Emulation Status</th>
+      <th>Evidence</th>
+      <th>Detection</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr>
+      <td>T1218.005</td>
+      <td>System Binary Proxy Execution: Mshta</td>
+      <td>mshta.exe executes malicious HTA downloader.</td>
+      <td>Stage 1</td>
+      <td class="ok">EMULATED</td>
+      <td>mshta.exe launched with HTA from extracted ZIP</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1204.001</td>
+      <td>User Execution: Malicious Link</td>
+      <td>User opens a document containing a link to malicious ZIP.</td>
+      <td>Stage 1</td>
+      <td class="partial">PARTIAL</td>
+      <td>ZIP download simulated without real user click</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1204.002</td>
+      <td>User Execution: Malicious File</td>
+      <td>User opens a masqueraded document.</td>
+      <td>Stage 1</td>
+      <td class="partial">PARTIAL</td>
+      <td>Execution simulated via automation</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1656</td>
+      <td>Impersonation</td>
+      <td>Document impersonates Ambassador of India.</td>
+      <td>Stage 1</td>
+      <td class="partial">PARTIAL</td>
+      <td>Masqueraded filenames and task names</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1574.002</td>
+      <td>Hijack Execution Flow: DLL Side-Loading</td>
+      <td>sqlwriter.exe side-loads malicious DLL.</td>
+      <td>Stage 2</td>
+      <td class="ok">EMULATED</td>
+      <td>sqlwriter.exe executed from working directory</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1055.001</td>
+      <td>Process Injection: DLL Injection</td>
+      <td>WineLoader injects payload into a loaded DLL.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1573.001</td>
+      <td>Encrypted Channel: Symmetric Cryptography</td>
+      <td>RC4 encryption used for C2 traffic.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1041</td>
+      <td>Exfiltration Over C2 Channel</td>
+      <td>Encrypted data exfiltration over HTTPS.</td>
+      <td>N/A</td>
+      <td class="partial">PARTIAL</td>
+      <td>HTTPS download via CALDERA file API</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1053.005</td>
+      <td>Scheduled Task/Job: Scheduled Task</td>
+      <td>Masqueraded scheduled task ensures persistence.</td>
+      <td>Stage 3</td>
+      <td class="ok">EMULATED</td>
+      <td>Scheduled task "MS SQL Writer" created</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1547.001</td>
+      <td>Registry Run Keys / Startup Folder</td>
+      <td>Optional WineLoader persistence mechanism.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1140</td>
+      <td>Deobfuscate/Decode Files or Information</td>
+      <td>RC4 decryption of strings and modules.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1036.004</td>
+      <td>Masquerading: Masquerade Task</td>
+      <td>Scheduled task mimics legitimate Microsoft task.</td>
+      <td>Stage 3</td>
+      <td class="ok">EMULATED</td>
+      <td>Task name and description impersonation</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+  </tbody>
+</table>
+
+</body>
+</html>

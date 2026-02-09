@@ -1,0 +1,12 @@
+- name: Create PowerShell ScriptBlockLogging key
+  win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\PowerShell
+    name: ScriptBlockLogging
+    state: present
+
+- name: Enable PowerShell ScriptBlock Logging (4104)
+  win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging
+    name: EnableScriptBlockLogging
+    data: 1
+    type: dword

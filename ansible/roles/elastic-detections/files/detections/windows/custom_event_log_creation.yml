@@ -1,0 +1,24 @@
+title: Suspicious Eventcreate Usage
+
+id: f6g7h8i9-6666-4b9a-8c66-eventcreate0001
+status: stable
+description: Detects manual event log creation via eventcreate utility.
+author: Eric Philippov
+date: 2026-02-09
+
+logsource:
+  product: windows
+  service: sysmon
+
+detection:
+  selection:
+    event.code: "1"
+    process.name: "eventcreate.exe"
+
+  condition: selection
+
+level: medium
+
+tags:
+  - attack.defense_evasion
+  - attack.t1562

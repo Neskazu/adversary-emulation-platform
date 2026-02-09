@@ -1,8 +1,6 @@
 ---
 - name: Disable Windows Defender (Real-time monitoring)
   win_shell: Set-MpPreference -DisableRealtimeMonitoring $true
-  # В реальной жизни APT29 обходит Defender, но для теста лучше отключить,
-  # чтобы изучить поведение малвари, а не просто увидеть "Access Denied".
 
 - name: Install Chocolatey (Package Manager)
   win_chocolatey:
@@ -48,3 +46,21 @@
       args:
         chdir: C:\Windows\Temp\Sysmon
   when: sysmon_service.exists == false
+##Все что ниже только для lolbin
+- name: Copy Lab ProcessCreate override config
+  win_copy:
+    src: lab-processcreate.xml
+    dest: C:\Windows\Temp\Sysmon\lab-processcreate.xml
+    
+- name: Stop Sysmon
+  win_shell: |
+    Sysmon64.exe -u
+  args:
+    chdir: C:\Windows\Temp\Sysmon
+  ignore_errors: true
+
+- name: Install Sysmon with LAB config
+  win_shell: |
+    .\Sysmon64.exe -accepteula -i lab-processcreate.xml
+  args:
+    chdir: C:\Windows\Temp\Sysmon

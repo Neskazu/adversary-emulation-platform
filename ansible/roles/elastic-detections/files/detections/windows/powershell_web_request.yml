@@ -1,0 +1,30 @@
+title: PowerShell Web Request
+id: a1c3b6e1-1111-4b9a-8c11-pswebreq0001
+status: stable
+description: Detects PowerShell performing HTTP web request.
+author: Eric Philippov
+date: 2026-02-08
+
+logsource:
+  product: windows
+  service: powershell
+
+detection:
+  selection:
+    event.code: "4104"
+    powershell.file.script_block_text|contains:
+      - "Invoke-WebRequest"
+      - "iwr"
+      - "System.Net.WebClient"
+      - "DownloadFile"
+      - "http://"
+      - "https://"
+
+  condition: selection
+
+level: low
+
+tags:
+  - attack.command_and_control
+  - attack.t1105
+  - attack.t1059.001

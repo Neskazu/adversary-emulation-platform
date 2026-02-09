@@ -1,0 +1,14 @@
+<Sysmon schemaversion="4.90">
+  <EventFiltering>
+
+    <ProcessCreate onmatch="exclude">
+      <Image condition="end with">conhost.exe</Image>
+      <Image condition="end with">smss.exe</Image>
+      <Image condition="end with">csrss.exe</Image>
+      <Image condition="end with">wininit.exe</Image>
+      <Image condition="end with">services.exe</Image>
+      <Image condition="end with">lsass.exe</Image>
+    </ProcessCreate>
+
+  </EventFiltering>
+</Sysmon>

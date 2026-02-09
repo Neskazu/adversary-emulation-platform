@@ -52,6 +52,7 @@
 - name: Configure Windows base
   hosts: windows_hosts
   roles:
+    - windows_hardening
     - windows_base
     - elastic_agent_windows 
 

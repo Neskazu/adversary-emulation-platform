@@ -1,0 +1,35 @@
+title: Potential DLL Side-Loading From User-Writable Directory
+
+id: e5f6g7h8-5555-4b9a-8c55-sideload0001
+status: stable
+description: Detects execution of an executable from user-writable directory
+  that is commonly abused for DLL side-loading.
+
+author: Eric Philippov
+date: 2026-02-09
+
+logsource:
+  product: windows
+  service: sysmon
+
+detection:
+  selection:
+    event.code: "1"
+    process.executable|contains:
+      - "C:\\Users\\Public\\"
+      - "C:\\Users\\"
+      - "C:\\ProgramData\\"
+      - "C:\\Temp\\"
+
+  filter_legit:
+    process.executable|contains:
+      - "C:\\Users\\Public\\Documents\\"
+      - "C:\\Users\\Public\\Pictures\\"
+
+  condition: selection and not filter_legit
+
+level: high
+
+tags:
+  - attack.execution
+  - attack.t1574.002

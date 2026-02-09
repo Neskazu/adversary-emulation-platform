@@ -1,0 +1,29 @@
+title: PowerShell Download And Execute HTA From Temp
+id: 3f2b7c9e-7d44-4b5a-9b7e-0d9f1a2e6abc
+status: experimental
+description: Detects PowerShell downloading archive and executing HTA via mshta from Temp directory.
+author: Eric Philippov
+date: 2026-02-08
+
+logsource:
+  product: windows
+  service: powershell
+
+detection:
+  selection:
+    event.code: "4104"
+    powershell.file.script_block_text|contains:
+      - "Invoke-WebRequest"
+      - "Expand-Archive"
+      - "Start-Process"
+      - "mshta.exe"
+
+  condition: selection
+
+level: high
+
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.t1218.005
+  - attack.command_and_control

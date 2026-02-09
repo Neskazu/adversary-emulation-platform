@@ -1,12 +1,21 @@
+- name: Install system dependencies for Python
+  become: true  
+  apt:
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: yes
+    
 - name: Create working directory on remote host
   file:
     path: /opt/sigma-pipeline
     state: directory
     mode: '0755'
 
-- name: Copy detection files to the Vagrant VM
+- name: Copy detection files
   copy:
-    src: "{{ role_path }}/files/" 
+    src: "{{ role_path }}/files/"
     dest: /opt/sigma-pipeline/
     mode: '0755'
 

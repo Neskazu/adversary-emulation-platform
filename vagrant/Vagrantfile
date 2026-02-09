@@ -41,11 +41,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     s.vm.hostname = "siem"
     s.vm.network "private_network", ip: "10.10.10.30"
     s.vm.network "private_network", ip: "192.168.70.10"
-    
     s.vm.provider "virtualbox" do |vb|
       vb.memory = 6096
       vb.cpus = 3
     end
+    s.vm.provision "shell", inline: <<-SHELL
+      # растянуть LV на весь доступный PV
+      sudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv || true
+      # растянуть ext4 FS
+      sudo resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv || true
+    SHELL
+
   end
 
   # -------------------------
@@ -100,7 +106,7 @@ config.vm.define "attacker" do |a|
 
   a.vm.provider "virtualbox" do |vb|
     vb.memory = 4096
-    vb.cpus = 4
+    vb.cpus = 3
   end
 end
 
