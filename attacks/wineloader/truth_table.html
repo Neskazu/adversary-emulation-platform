@@ -57,7 +57,7 @@
       <td>Stage 1</td>
       <td class="ok">EMULATED</td>
       <td>mshta.exe launched with HTA from extracted ZIP</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
@@ -66,8 +66,8 @@
       <td>User opens a document containing a link to malicious ZIP.</td>
       <td>Stage 1</td>
       <td class="partial">PARTIAL</td>
-      <td>ZIP download simulated without real user click</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td>ZIP download simulated via Invoke-WebRequest</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
@@ -77,7 +77,7 @@
       <td>Stage 1</td>
       <td class="partial">PARTIAL</td>
       <td>Execution simulated via automation</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
@@ -97,7 +97,7 @@
       <td>Stage 2</td>
       <td class="ok">EMULATED</td>
       <td>sqlwriter.exe executed from working directory</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
@@ -127,7 +127,7 @@
       <td>N/A</td>
       <td class="partial">PARTIAL</td>
       <td>HTTPS download via CALDERA file API</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
@@ -137,7 +137,7 @@
       <td>Stage 3</td>
       <td class="ok">EMULATED</td>
       <td>Scheduled task "MS SQL Writer" created</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
@@ -153,11 +153,11 @@
     <tr>
       <td>T1140</td>
       <td>Deobfuscate/Decode Files or Information</td>
-      <td>RC4 decryption of strings and modules.</td>
-      <td>N/A</td>
-      <td class="no">NOT EMULATED</td>
-      <td>N/A</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td>Decompressing files via Expand-Archive.</td>
+      <td>Stage 1, Stage 2</td>
+      <td class="ok">EMULATED</td>
+      <td>Expand-Archive used to unzip payloads</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
@@ -167,7 +167,7 @@
       <td>Stage 3</td>
       <td class="ok">EMULATED</td>
       <td>Task name and description impersonation</td>
-      <td class="unknown">NOT VALIDATED</td>
+      <td class="ok">DETECTED</td>
     </tr>
 
   </tbody>
