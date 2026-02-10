@@ -1,0 +1,21 @@
+title: APT29 Stage 3 Correlation (Execution + Scheduled Task Persistence)
+
+id: apt29-seq-0003
+status: stable
+description: |
+  Detects the execution of a suspicious binary from a user-writable directory 
+  followed by the registration of a new scheduled task using PowerShell, 
+  consistent with WineLoader persistence mechanisms.
+
+author: Eric Philippov
+date: 2026-02-10
+level: critical
+
+tags:
+  - attack.execution
+  - attack.persistence
+  - attack.t1053.005
+  - correlation
+
+logsource:
+  product: windows

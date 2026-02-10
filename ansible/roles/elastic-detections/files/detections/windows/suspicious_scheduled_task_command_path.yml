@@ -1,0 +1,19 @@
+title: PowerShell Scheduled Task Cmdlet via Writable Path
+id: f6g7h8i9-psh-task-0001
+status: stable
+logsource:
+  product: windows
+  service: powershell
+detection:
+  selection:
+    event.code: "4104"
+    powershell.file.script_block_text|contains:
+      - "Register-ScheduledTask"
+      - "New-ScheduledTask"
+  suspicious_paths:
+    powershell.file.script_block_text|contains:
+      - "C:\\Users\\Public\\"
+      - "C:\\ProgramData\\"
+      - "C:\\Windows\\Temp\\"
+  condition: selection and suspicious_paths
+level: critical

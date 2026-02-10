@@ -1,0 +1,20 @@
+elastic:
+  rule_type: eql
+  severity: critical
+  risk_score: 99
+  query: |
+    sequence by host.id with maxspan=15m
+      [process where event.code == "1" and
+        process.executable : (
+          "C:\\Users\\Public\\*",
+          "C:\\ProgramData\\*",
+          "C:\\Windows\\Temp\\*"
+        )
+      ]
+      [process where event.code : ("1", "4104") and
+        (
+          process.command_line : ("*Register-ScheduledTask*", "*schtasks*") or
+          stringContains(powershell.file.script_block_text, "Register-ScheduledTask")
+        ) and
+        process.command_line : ("*C:\\Users\\*", "*C:\\ProgramData\\*", "*C:\\Temp\\*")
+      ]
