@@ -12,11 +12,9 @@ from requests.auth import HTTPBasicAuth
 # CONFIG
 # =========================
 
-# Путь к sigma-cli (берем из окружения или ищем дефолт)
 SIGMA_CLI = os.getenv("SIGMA_CLI", "/opt/sigma-pipeline/.venv/bin/sigma")
 SIGMA_PIPELINE = os.getenv("SIGMA_PIPELINE", "ecs_windows")
 
-# КРЕДЕНШЕНЫ: Важно! Пароль должен совпадать с тем, что мы задали через curl
 ELASTIC_USER = os.getenv("ELASTIC_USER", "sigma")
 ELASTIC_PASS = os.getenv("ELASTIC_PASSWORD", "SuperStrongSigmaPassw0rd!") 
 KIBANA_URL = os.getenv("KIBANA_URL", "http://localhost:5601")
@@ -70,11 +68,8 @@ def build_rule(sigma: dict, meta: dict, query: str) -> dict:
     elastic = meta.get("elastic", {})
     severity = elastic.get("severity", "low")
     
-    # 1. Определяем тип правила (из мета-файла или дефолт)
     rule_type = elastic.get("rule_type", "query")
     
-    # 2. Логика выбора языка и запроса
-    # Если это EQL, берем запрос из МЕТА-файла. Если нет - берем конвертированный Sigma (query)
     if rule_type == "eql":
         query_language = "eql"
         final_query = elastic.get("query")
@@ -84,7 +79,6 @@ def build_rule(sigma: dict, meta: dict, query: str) -> dict:
         query_language = "lucene"
         final_query = query
 
-    # 3. Собираем основной скелет правила
     rule = {
         "rule_id": sigma["id"],
         "name": sigma["title"],
@@ -100,7 +94,6 @@ def build_rule(sigma: dict, meta: dict, query: str) -> dict:
         "type": rule_type
     }
 
-    # 4. ВОЗВРАЩАЕМ ТВОЙ БЛОК ДЛЯ THRESHOLD
     if rule["type"] == "threshold":
         threshold = elastic.get("threshold")
         if not threshold:
@@ -123,7 +116,6 @@ def build_rule(sigma: dict, meta: dict, query: str) -> dict:
 def deploy_rule(rule: dict):
     url = f"{KIBANA_URL}/api/detection_engine/rules"
     TIMEOUT = 90
-    # 1. Пытаемся СОЗДАТЬ правило
     r = requests.post(
         url,
         headers=HEADERS,
@@ -132,12 +124,10 @@ def deploy_rule(rule: dict):
         timeout=TIMEOUT
     )
 
-    # Успешно создано
     if r.status_code in (200, 201):
         print(f"[+] Created: {rule['name']}")
         return
 
-    # 2. Уже существует -> ОБНОВЛЯЕМ
     if r.status_code == 409:
         update_url = f"{KIBANA_URL}/api/detection_engine/rules"
 
@@ -183,7 +173,6 @@ def main():
 
     print(f"[*] Starting pipeline. Base path: {base_path.absolute()}")
 
-    # 1. Load global defaults (low baseline)
     global_defaults = load_yaml(defaults_file)
 
     profiles_path = base_path / "profiles"
@@ -197,7 +186,6 @@ def main():
         sigma_rule = load_yaml(sigma_file)
         merged_meta = copy.deepcopy(global_defaults)
 
-        # Применяем профили и переопределения
         level = sigma_rule.get("level", "low").lower()
         profile_file = profiles_path / f"{level}.meta.yml"
         if profile_file.exists():
@@ -207,14 +195,12 @@ def main():
         if meta_file.exists():
             deep_merge(merged_meta, load_yaml(meta_file))
 
-        # 5. КОНВЕРТАЦИЯ ИЛИ ПРОПУСК
         if merged_meta.get("elastic", {}).get("rule_type") == "eql":
             print(f"    [+] Rule type is EQL, skipping sigma-cli conversion")
             lucene_query = "" 
         else:
             lucene_query = sigma_to_lucene(sigma_file)
 
-        # 6. Сборка и деплой
         rule = build_rule(sigma_rule, merged_meta, lucene_query)
         deploy_rule(rule)
 
