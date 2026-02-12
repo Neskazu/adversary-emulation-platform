@@ -1,0 +1,30 @@
+- name: Deprioritize NAT interface
+  win_shell: |
+    $nat = Get-NetIPAddress | Where-Object { $_.IPAddress -like "10.0.*" }
+    foreach ($ip in $nat) {
+        Set-NetIPInterface -InterfaceIndex $ip.InterfaceIndex -InterfaceMetric 500
+    }
+
+- name: Prioritize internal interface
+  win_shell: |
+    $internal = Get-NetIPAddress | Where-Object { $_.IPAddress -like "192.168.*" }
+    foreach ($ip in $internal) {
+        Set-NetIPInterface -InterfaceIndex $ip.InterfaceIndex -InterfaceMetric 100
+    }
+
+- name: Configure default route via lab router
+  win_shell: |
+    $internal = Get-NetIPAddress | Where-Object { $_.IPAddress -like "192.168.*" }
+    foreach ($ip in $internal) {
+        $ifIndex = $ip.InterfaceIndex
+        $gw = "{{ target_gateway }}"
+
+        Get-NetRoute -InterfaceIndex $ifIndex -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue |
+        Remove-NetRoute -Confirm:$false
+
+        New-NetRoute -InterfaceIndex $ifIndex `
+                     -DestinationPrefix "0.0.0.0/0" `
+                     -NextHop $gw `
+                     -RouteMetric 10 `
+                     -Confirm:$false
+    }

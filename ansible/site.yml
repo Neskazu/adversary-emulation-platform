@@ -6,6 +6,7 @@
   hosts: linux_hosts
   become: true
   roles:
+    - network_config
     - common
 
 # =========================
@@ -26,7 +27,6 @@
   hosts: siems
   become: true
   roles:
-    - common
     - siem_base
     - docker
     - elk
@@ -40,7 +40,6 @@
   hosts: attacker
   become: true
   roles:
-    - common
     - docker
     - caldera_server
     - caldera_payloads
@@ -52,6 +51,7 @@
 - name: Configure Windows base
   hosts: windows_hosts
   roles:
+    - network_config
     - windows_hardening
     - windows_base
     - elastic_agent_windows 

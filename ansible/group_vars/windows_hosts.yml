@@ -9,3 +9,5 @@ ansible_winrm_scheme: http
 elastic_agent_version: "8.17.1"
 fleet_url: "http://10.10.10.30:8220"
 fleet_enrollment_token: "GENERATED_FROM_KIBANA_ENROLLMENT_TOKENS"
+
+target_gateway: 192.168.50.1

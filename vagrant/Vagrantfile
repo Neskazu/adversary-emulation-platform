@@ -25,9 +25,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     r.vm.box = "bento/ubuntu-20.04"
     r.vm.hostname = "router"
     r.vm.network "private_network", ip: "10.10.10.2"    # Mgmt
-    r.vm.network "private_network", ip: "192.168.50.1", auto_config: false
-    r.vm.network "private_network", ip: "192.168.60.1", auto_config: false
-    r.vm.network "private_network", ip: "192.168.70.1", auto_config: false
+    r.vm.network "private_network", ip: "192.168.50.1", virtualbox__intnet: "corp_net", auto_config: false
+    r.vm.network "private_network", ip: "192.168.60.1", virtualbox__intnet: "attacker_net", auto_config: false
+    r.vm.network "private_network", ip: "192.168.70.1", virtualbox__intnet: "siem_net", auto_config: false
+
     
     r.vm.provider "virtualbox" do |vb|
       vb.memory = 1024
@@ -40,7 +41,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     s.vm.box = "bento/ubuntu-20.04"
     s.vm.hostname = "siem"
     s.vm.network "private_network", ip: "10.10.10.30"
-    s.vm.network "private_network", ip: "192.168.70.10"
+    s.vm.network "private_network", ip: "192.168.70.10", virtualbox__intnet: "siem_net"
     s.vm.provider "virtualbox" do |vb|
       vb.memory = 6096
       vb.cpus = 3
@@ -61,7 +62,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     d.vm.box = "gusztavvargadr/windows-server-2019-standard"
     d.vm.hostname = "dc"
     d.vm.network "private_network", ip: "10.10.10.10"
-    d.vm.network "private_network", ip: "192.168.50.10"
+    d.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "corp_net"
     d.vm.communicator = "winrm"
     d.vm.provider "virtualbox" do |vb|
       vb.gui = true
@@ -78,7 +79,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   w.vm.communicator = "winrm"
 
   w.vm.network "private_network", ip: "10.10.10.11"
-  w.vm.network "private_network", ip: "192.168.50.11"
+  w.vm.network "private_network", ip: "192.168.50.11", virtualbox__intnet: "corp_net"
 
   w.vm.provider "virtualbox" do |vb|
     vb.gui = true
@@ -102,7 +103,7 @@ config.vm.define "attacker" do |a|
   a.vm.network "private_network", ip: "10.10.10.50"
 
   # C2 / Management network
-  a.vm.network "private_network", ip: "192.168.60.50"
+  a.vm.network "private_network", ip: "192.168.60.50", virtualbox__intnet: "attacker_net"
 
   a.vm.provider "virtualbox" do |vb|
     vb.memory = 4096

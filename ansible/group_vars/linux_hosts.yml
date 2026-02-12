@@ -1,2 +1,6 @@
 ansible_user: vagrant
 ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+mgmt_interface: eth1
+# Default Vagrant NAT interface
+nat_interface: eth0
+internal_dns: [8.8.8.8, 1.1.1.1]

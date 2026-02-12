@@ -1,0 +1,34 @@
+- name: Deprioritize NAT and Mgmt interfaces
+  copy:
+    dest: /etc/netplan/00-metrics.yaml
+    content: |
+      network:
+        version: 2
+        ethernets:
+          {{ nat_interface }}:
+            dhcp4: true
+            dhcp4-overrides:
+              route-metric: 500
+          {{ mgmt_interface }}:
+            dhcp4: true
+            dhcp4-overrides:
+              route-metric: 200
+  notify: Apply netplan
+
+- name: Configure internal interface with default route via router
+  copy:
+    dest: /etc/netplan/99-internal-route.yaml
+    content: |
+      network:
+        version: 2
+        ethernets:
+          {{ internal_interface }}:
+            addresses:
+              - {{ internal_ip }}/24
+            nameservers:
+              addresses: {{ internal_dns }}
+            routes:
+              - to: default
+                via: {{ internal_gateway }}
+                metric: 100
+  notify: Apply netplan

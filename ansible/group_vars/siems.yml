@@ -11,3 +11,7 @@ encrypted_saved_objects_key: "this_is_a_very_strong_and_long_encryption_key_32_c
 encryption_key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
 caldera_group: linux_siem
+
+internal_interface: eth2
+internal_ip: 192.168.70.10
+internal_gateway: 192.168.70.1

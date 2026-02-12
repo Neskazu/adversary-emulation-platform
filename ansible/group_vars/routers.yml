@@ -1,1 +1,3 @@
 caldera_group: linux_router
+ansible_user: vagrant
+ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
