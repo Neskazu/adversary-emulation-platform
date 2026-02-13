@@ -2,7 +2,12 @@
   name: WineLoader Stage 1 – HTA Delivery (Fixed)
   description: Simulating APT29 download pattern with enhanced logging and fixed braces.
   tactic: execution
-  technique_id: T1218.005
+  technique_id:
+  - T1218.005   
+  - T1204.001   
+  - T1204.002  
+  - T1656       
+  - T1140      
   technique_name: "Signed Binary Proxy Execution: MSHTA"
   platforms:
     windows:

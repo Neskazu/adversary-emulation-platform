@@ -7,14 +7,19 @@
     name: chocolatey
     state: present
 
-- name: Install Tools for Victim (Adobe Reader, Chrome, Unzip)
+- name: Install 7-Zip and Notepad++
   win_chocolatey:
     name:
-      #- adobereader # Проблемы с adobereade именно в виртуалке и vagrant, необходимости в нем нет сейчас все смотрят в браузере
-      - googlechrome
       - 7zip
       - notepadplusplus
     state: present
+
+- name: Install latest Google Chrome
+  win_chocolatey:
+    name: googlechrome
+    state: latest
+    ignore_checksums: yes
+
 
 - name: Check if Sysmon64 service exists
   win_service:

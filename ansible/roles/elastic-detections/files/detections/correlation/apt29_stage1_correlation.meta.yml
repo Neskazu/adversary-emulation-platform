@@ -2,6 +2,7 @@ elastic:
   rule_type: eql
   severity: high
   risk_score: 85
+  index: "logs-windows*"
   query: |
     sequence by host.id with maxspan=5m
       [process where event.code == "4104" and (

@@ -2,7 +2,9 @@
   name: WineLoader Stage 3 – Masquerade Task
   description: Creation of a masqueraded scheduled task (Wait for Stage 2)
   tactic: persistence
-  technique_id: T1053.005
+  technique_id:
+  - T1053.005  
+  - T1036.004 
   technique_name: "Scheduled Task/Job: Scheduled Task"
   platforms:
     windows:

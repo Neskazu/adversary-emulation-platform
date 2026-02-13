@@ -2,7 +2,10 @@
   name: WineLoader Stage 2 – Core Loader
   description: Payload extraction and DLL side-loading
   tactic: execution
-  technique_id: T1574.002
+  technique_id:
+  - T1574.002   
+  - T1140      
+  - T1041       
   technique_name: "DLL Side-Loading"
   platforms:
     windows:
