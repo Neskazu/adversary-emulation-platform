@@ -138,4 +138,5 @@ ANSIBLE_ROLES_PATH=./roles ansible-playbook -i inventory.ini playbooks/deploy-ca
 После выполнения агенты регистрируются на сервере Caldera и готовы к выполнению сценариев.
 
 ---
-
+## 🎯 MITRE ATT&CK Coverage - APT29 WineLoader
+![WineLoader_without_background](https://github.com/user-attachments/assets/793c6d30-4ad7-4af0-8cf2-87fc6f54abe5)
