@@ -1,0 +1,22 @@
+- name: Ensure DNS points to Domain Controller
+  win_dns_client:
+    adapter_names: "*"
+    dns_servers:
+      - "{{ domain_controller_ip }}"
+
+- name: Join machine to domain
+  win_domain_membership:
+    dns_domain_name: "{{ domain_name }}"
+    domain_admin_user: "{{ domain_admin_user }}"
+    domain_admin_password: "{{ domain_admin_password }}"
+    domain_ou_path: "{{ domain_ou_path | default(omit) }}"
+    state: domain
+  register: domain_join_result
+
+- name: Reboot after domain join
+  win_reboot:
+    msg: "Rebooting after domain join"
+    pre_reboot_delay: 5
+  when:
+    - reboot_after_join
+    - domain_join_result.reboot_required
