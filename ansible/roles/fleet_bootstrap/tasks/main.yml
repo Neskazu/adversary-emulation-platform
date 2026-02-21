@@ -11,6 +11,23 @@
   delay: 10
   until: kibana_status.status == 200
 
+- name: Check Fleet status via global API
+  uri:
+    url: "{{ kibana_url }}/api/status"
+    method: GET
+    user: "{{ elastic_user }}"
+    password: "{{ elastic_password }}"
+    force_basic_auth: true
+    headers:
+      kbn-xsrf: "true"
+    status_code: 200
+  register: kibana_status
+  retries: 20
+  delay: 10
+  until: 
+    - kibana_status.json is defined
+    - kibana_status.json.status.plugins.fleet.level == 'available'
+
 - name: Wait for Fleet API
   uri:
     url: "{{ kibana_url }}/api/fleet/agent_policies"

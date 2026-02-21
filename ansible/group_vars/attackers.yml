@@ -2,9 +2,9 @@ caldera_server: http://10.10.10.50:8888
 caldera_host: 0.0.0.0
 caldera_port: 8888
 
-caldera_api_key: ADMIN123
-caldera_api_key_red: ADMIN123
-caldera_api_key_blue: BLUEADMIN123
+caldera_api_key: "{{ vault_caldera_api_key }}"
+caldera_api_key_red: "{{ vault_caldera_api_key_red }}"
+caldera_api_key_blue: "{{ vault_caldera_api_key_blue }}"
 
 caldera_group: apt29
 

@@ -67,7 +67,8 @@
 # =========================
 # Join WS01 to domain
 # =========================
-- name: Join WS01 to domain
+- name: Configure WS01
   hosts: ws01
   roles:
+    - windows_base_soft
     - windows_domain_join

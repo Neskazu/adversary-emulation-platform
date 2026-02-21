@@ -10,3 +10,29 @@
     name: EnableScriptBlockLogging
     data: 1
     type: dword
+
+- name: Create PowerShell ModuleLogging key
+  win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\PowerShell
+    name: ModuleLogging
+    state: present
+
+- name: Enable PowerShell Module Logging (4103)
+  win_regedit:
+    path: HKLM:\Software\Policies\Microsoft\Windows\PowerShell\ModuleLogging
+    name: EnableModuleLogging
+    data: 1
+    type: dword
+
+- name: Enable Process Creation audit (4688)
+  win_command: auditpol /set /subcategory:"Process Creation" /success:enable
+
+- name: Enable command line logging for 4688
+  win_regedit:
+    path: HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit
+    name: ProcessCreationIncludeCmdLine_Enabled
+    data: 1
+    type: dword
+
+- name: Enable Logon audit (4624, 4625)
+  win_command: auditpol /set /subcategory:"Logon" /success:enable /failure:enable

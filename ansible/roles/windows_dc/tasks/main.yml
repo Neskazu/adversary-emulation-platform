@@ -9,7 +9,7 @@
 - name: Create Domain (Promote to DC)
   ansible.windows.win_domain:
     dns_domain_name: corp.local
-    safe_mode_password: "Password123!" # Пароль для восстановления
+    safe_mode_password: "Password123!" 
   register: ad_promotion
 
 - name: Reboot if promotion happened

@@ -1,14 +1,14 @@
-elastic_user: "elastic"
-elastic_password: "SuperStrongElasticPassw0rd!"
-kibana_system_password: "KibanaSysPassw0rd!"
-sigma_user: "sigma"
-sigma_password: "SuperStrongElasticPassw0rd!"
+elastic_user: "{{ vault_elastic_user }}"
+elastic_password: "{{ vault_elastic_password }}"
+kibana_system_password: "{{ vault_kibana_system_password }}"
+sigma_user: "{{ vault_sigma_user }}"
+sigma_password: "{{ vault_sigma_password }}"
 kibana_url: "http://10.10.10.30:5601"
 elasticsearch_url: "http://10.10.10.30:9200"
 sigma_cli_path: "/opt/sigma-pipeline/.venv/bin/sigma"
 
-encrypted_saved_objects_key: "this_is_a_very_strong_and_long_encryption_key_32_chars_min"
-encryption_key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+encrypted_saved_objects_key: "{{ vault_encrypted_saved_objects_key }}"
+encryption_key: "{{ vault_encryption_key }}"
 
 caldera_group: linux_siem
 

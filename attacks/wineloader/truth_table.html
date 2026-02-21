@@ -51,29 +51,9 @@
   <tbody>
 
     <tr>
-      <td>T1218.005</td>
-      <td>System Binary Proxy Execution: Mshta</td>
-      <td>mshta.exe executes malicious HTA downloader.</td>
-      <td>Stage 1</td>
-      <td class="ok">EMULATED</td>
-      <td>mshta.exe launched with HTA from extracted ZIP</td>
-      <td class="ok">DETECTED</td>
-    </tr>
-
-    <tr>
-      <td>T1204.001</td>
-      <td>User Execution: Malicious Link</td>
-      <td>User opens a document containing a link to malicious ZIP.</td>
-      <td>Stage 1</td>
-      <td class="partial">PARTIAL</td>
-      <td>ZIP download simulated via Invoke-WebRequest</td>
-      <td class="ok">DETECTED</td>
-    </tr>
-
-    <tr>
       <td>T1204.002</td>
       <td>User Execution: Malicious File</td>
-      <td>User opens a masqueraded document.</td>
+      <td>The PDF file masquerades as an invitation and contains a malicious link.</td>
       <td>Stage 1</td>
       <td class="partial">PARTIAL</td>
       <td>Execution simulated via automation</td>
@@ -83,7 +63,7 @@
     <tr>
       <td>T1656</td>
       <td>Impersonation</td>
-      <td>Document impersonates Ambassador of India.</td>
+      <td>The PDF impersonates the Ambassador of India.</td>
       <td>Stage 1</td>
       <td class="partial">PARTIAL</td>
       <td>Masqueraded filenames and task names</td>
@@ -91,9 +71,19 @@
     </tr>
 
     <tr>
+      <td>T1204.001</td>
+      <td>User Execution: Malicious Link</td>
+      <td>PDF link leads to download of malicious ZIP archive.</td>
+      <td>Stage 1</td>
+      <td class="partial">PARTIAL</td>
+      <td>ZIP download simulated via Invoke-WebRequest</td>
+      <td class="ok">DETECTED</td>
+    </tr>
+
+    <tr>
       <td>T1574.002</td>
       <td>Hijack Execution Flow: DLL Side-Loading</td>
-      <td>sqlwriter.exe side-loads malicious DLL.</td>
+      <td>sqlwriter.exe side-loads vcruntime140.dll.</td>
       <td>Stage 2</td>
       <td class="ok">EMULATED</td>
       <td>sqlwriter.exe executed from working directory</td>
@@ -103,7 +93,7 @@
     <tr>
       <td>T1055.001</td>
       <td>Process Injection: DLL Injection</td>
-      <td>WineLoader injects payload into a loaded DLL.</td>
+      <td>DLL hollowing injects WineLoader into sqlwriter.exe memory.</td>
       <td>N/A</td>
       <td class="no">NOT EMULATED</td>
       <td>N/A</td>
@@ -113,7 +103,7 @@
     <tr>
       <td>T1573.001</td>
       <td>Encrypted Channel: Symmetric Cryptography</td>
-      <td>RC4 encryption used for C2 traffic.</td>
+      <td>RC4 encrypts communication between WineLoader and C2.</td>
       <td>N/A</td>
       <td class="no">NOT EMULATED</td>
       <td>N/A</td>
@@ -123,7 +113,7 @@
     <tr>
       <td>T1041</td>
       <td>Exfiltration Over C2 Channel</td>
-      <td>Encrypted data exfiltration over HTTPS.</td>
+      <td>Encrypted data is exfiltrated to C2 server.</td>
       <td>N/A</td>
       <td class="partial">PARTIAL</td>
       <td>HTTPS download via CALDERA file API</td>
@@ -131,19 +121,29 @@
     </tr>
 
     <tr>
+      <td>T1584</td>
+      <td>Compromise Infrastructure</td>
+      <td>Compromised websites host payloads and act as C2.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
       <td>T1053.005</td>
       <td>Scheduled Task/Job: Scheduled Task</td>
-      <td>Masqueraded scheduled task ensures persistence.</td>
+      <td>Scheduled task "MS SQL Writer" ensures persistence.</td>
       <td>Stage 3</td>
       <td class="ok">EMULATED</td>
-      <td>Scheduled task "MS SQL Writer" created</td>
+      <td>Scheduled task created successfully</td>
       <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
       <td>T1547.001</td>
       <td>Registry Run Keys / Startup Folder</td>
-      <td>Optional WineLoader persistence mechanism.</td>
+      <td>Optional registry-based persistence mechanism.</td>
       <td>N/A</td>
       <td class="no">NOT EMULATED</td>
       <td>N/A</td>
@@ -153,21 +153,91 @@
     <tr>
       <td>T1140</td>
       <td>Deobfuscate/Decode Files or Information</td>
-      <td>Decompressing files via Expand-Archive.</td>
+      <td>WineLoader strings and modules encrypted with RC4.</td>
       <td>Stage 1, Stage 2</td>
       <td class="ok">EMULATED</td>
-      <td>Expand-Archive used to unzip payloads</td>
+      <td>Expand-Archive and decoding behavior observed</td>
       <td class="ok">DETECTED</td>
     </tr>
 
     <tr>
+      <td>T1036.001</td>
+      <td>Masquerading: Invalid Code Signature</td>
+      <td>vcruntime140.dll uses invalid Microsoft signature.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
       <td>T1036.004</td>
-      <td>Masquerading: Masquerade Task</td>
+      <td>Masquerading: Masquerade Task or Service</td>
       <td>Scheduled task mimics legitimate Microsoft task.</td>
       <td>Stage 3</td>
       <td class="ok">EMULATED</td>
       <td>Task name and description impersonation</td>
       <td class="ok">DETECTED</td>
+    </tr>
+
+    <tr>
+      <td>T1027.007</td>
+      <td>Obfuscated Files or Information: Dynamic API Resolution</td>
+      <td>API names decrypted before dynamic resolution.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1027.009</td>
+      <td>Obfuscated Files or Information: Embedded Payloads</td>
+      <td>Encrypted modules embedded in vcruntime140.dll and C2 responses.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1218.005</td>
+      <td>System Binary Proxy Execution: Mshta</td>
+      <td>mshta.exe executes malicious wine.hta downloader.</td>
+      <td>Stage 1</td>
+      <td class="ok">EMULATED</td>
+      <td>mshta.exe executed HTA payload</td>
+      <td class="ok">DETECTED</td>
+    </tr>
+
+    <tr>
+      <td>T1033</td>
+      <td>System Owner/User Discovery</td>
+      <td>Current user and system name sent to C2.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1071.001</td>
+      <td>Application Layer Protocol: Web Protocols</td>
+      <td>WineLoader communicates with C2 over HTTPS.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
+    </tr>
+
+    <tr>
+      <td>T1001.001</td>
+      <td>Data Obfuscation: Junk Data</td>
+      <td>Random junk bytes prepended before encryption.</td>
+      <td>N/A</td>
+      <td class="no">NOT EMULATED</td>
+      <td>N/A</td>
+      <td class="unknown">NOT VALIDATED</td>
     </tr>
 
   </tbody>

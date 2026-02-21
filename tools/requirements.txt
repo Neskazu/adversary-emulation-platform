@@ -1,0 +1,6 @@
+requests
+PyYAML
+flake8<7
+yamllint
+ansible-lint<7
+bandit<2

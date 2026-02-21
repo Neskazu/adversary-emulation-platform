@@ -1,8 +1,8 @@
 caldera_group: windows_ws
 
-domain_controller_ip: 192.168.100.10
-domain_name: lab.local
-domain_admin_user: Administrator
-domain_admin_password: "P@ssw0rd!"
-domain_ou_path: "OU=Workstations,DC=lab,DC=local"
+domain_controller_ip: 192.168.50.10
+domain_name: corp.local
+domain_admin_user: vagrant
+domain_admin_password: vagrant
+domain_ou_path: "OU=Workstations,DC=corp,DC=local"
 reboot_after_join: true

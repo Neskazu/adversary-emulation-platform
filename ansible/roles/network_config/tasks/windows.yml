@@ -12,7 +12,7 @@
         Set-NetIPInterface -InterfaceIndex $ip.InterfaceIndex -InterfaceMetric 100
     }
 
-- name: Configure default route via lab router
+- name: Configure default route and DNS via lab router
   win_shell: |
     $internal = Get-NetIPAddress | Where-Object { $_.IPAddress -like "192.168.*" }
     foreach ($ip in $internal) {
@@ -27,4 +27,6 @@
                      -NextHop $gw `
                      -RouteMetric 10 `
                      -Confirm:$false
+                     
+        Set-DnsClientServerAddress -InterfaceIndex $ifIndex -ServerAddresses ("8.8.8.8", "1.1.1.1")
     }

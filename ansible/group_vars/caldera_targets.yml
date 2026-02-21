@@ -1,2 +1,2 @@
 caldera_server: http://10.10.10.50:8888
-caldera_api_key_red: ADMIN123
+caldera_api_key_red: "{{ vault_caldera_api_key_red }}"

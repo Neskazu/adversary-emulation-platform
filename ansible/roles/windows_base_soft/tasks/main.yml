@@ -1,0 +1,18 @@
+  
+- name: Install Chocolatey (Package Manager)
+  win_chocolatey:
+    name: chocolatey
+    state: present
+
+- name: Install 7-Zip and Notepad++
+  win_chocolatey:
+    name:
+      - 7zip
+      - notepadplusplus
+    state: present
+
+- name: Install latest Google Chrome
+  win_chocolatey:
+    name: googlechrome
+    state: latest
+    ignore_checksums: yes

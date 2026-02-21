@@ -1,13 +1,13 @@
 ansible_user: vagrant
-ansible_password: vagrant
+ansible_password: "{{ vault_ansible_password }}"
 ansible_port: 5985
 ansible_connection: winrm
 ansible_winrm_server_cert_validation: ignore
-ansible_winrm_transport: basic
+ansible_winrm_transport: ntlm
 ansible_winrm_scheme: http
 
 elastic_agent_version: "8.17.1"
 fleet_url: "http://10.10.10.30:8220"
-fleet_enrollment_token: "GENERATED_FROM_KIBANA_ENROLLMENT_TOKENS"
+fleet_enrollment_token: "{{ vault_fleet_enrollment_token }}"
 
 target_gateway: 192.168.50.1

@@ -1,25 +1,20 @@
 ---
 - name: Disable Windows Defender (Real-time monitoring)
   win_shell: Set-MpPreference -DisableRealtimeMonitoring $true
-
-- name: Install Chocolatey (Package Manager)
-  win_chocolatey:
-    name: chocolatey
-    state: present
-
-- name: Install 7-Zip and Notepad++
-  win_chocolatey:
-    name:
-      - 7zip
-      - notepadplusplus
-    state: present
-
-- name: Install latest Google Chrome
-  win_chocolatey:
-    name: googlechrome
-    state: latest
-    ignore_checksums: yes
-
+  
+- name: Disable Windows Sleep and Lock
+  win_shell: |
+    # Отключаем сон и гибернацию совсем
+    powercfg /x -monitor-timeout-ac 0
+    powercfg /x -monitor-timeout-dc 0
+    powercfg /x -disk-timeout-ac 0
+    powercfg /x -disk-timeout-dc 0
+    powercfg /x -standby-timeout-ac 0
+    powercfg /x -standby-timeout-dc 0
+    powercfg /x -hibernate-timeout-ac 0
+    powercfg /x -hibernate-timeout-dc 0
+    powercfg /hibernate off
+  tags: fix_power
 
 - name: Check if Sysmon64 service exists
   win_service:

@@ -59,7 +59,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # 3. DC VM (Windows Server 2019)
   # -------------------------
   config.vm.define "dc" do |d|
-    d.vm.box = "gusztavvargadr/windows-server-2019-standard"
+    d.vm.box = "jborean93/WindowsServer2022"
     d.vm.hostname = "dc"
     d.vm.network "private_network", ip: "10.10.10.10"
     d.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "corp_net"

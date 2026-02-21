@@ -43,6 +43,16 @@
     ctstate: ESTABLISHED,RELATED
     jump: ACCEPT
 
+- name: Disable hardware offloading on WAN interface
+  shell: ethtool -K eth0 tx off rx off
+  args:
+    executable: /bin/bash
+
+- name: Disable hardware offloading on LAN interface
+  shell: ethtool -K eth2 tx off rx off
+  args:
+    executable: /bin/bash
+
 - name: Configure NAT Masquerade on WAN (eth0)
   iptables:
     table: nat
