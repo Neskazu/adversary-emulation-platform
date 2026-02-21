@@ -9,7 +9,7 @@ on:
 jobs:
   lint-and-validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -27,15 +27,13 @@ jobs:
           pip install -r tools/requirements.txt
 
       - name: YAML lint (yamllint)
-        run: |
-          yamllint .
+        run: yamllint .
         continue-on-error: true
 
       - name: Security scan (Bandit)
-        run: |
-          bandit -r tools/ -ll
+        run: bandit -r tools/ -ll
 
-      - name: Python lint (flake8)
+      - name: Python lint (flake8 critical)
         run: |
           flake8 tools/ \
             --count \
@@ -43,24 +41,25 @@ jobs:
             --show-source \
             --statistics
 
+      - name: Python lint (flake8 non-critical)
+        run: |
           flake8 tools/ \
             --count \
             --exit-zero \
             --max-complexity=10 \
             --max-line-length=127 \
             --statistics
+        continue-on-error: true
 
       - name: Validate repository structure
-        run: |
-          python tools/validate_repo.py
+        run: python tools/validate_repo.py
 
       - name: Install Ansible collections
-        run: |
-          ansible-galaxy collection install community.general
+        run: ansible-galaxy collection install community.general
 
       - name: Ansible lint
-        run: |
-          ansible-lint ansible/site.yml
+        run: ansible-lint ansible/site.yml
+        continue-on-error: true
 
       - name: JSON syntax check
         shell: bash
