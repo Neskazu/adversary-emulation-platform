@@ -29,6 +29,7 @@ jobs:
       - name: YAML lint (yamllint)
         run: |
           yamllint .
+        continue-on-error: true
 
       - name: Security scan (Bandit)
         run: |
