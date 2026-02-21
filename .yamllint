@@ -3,7 +3,6 @@ extends: default
 rules:
   line-length:
     max: 127
-    allow-non-printable: true
 
   truthy:
     allowed-values: ['true', 'false', 'yes', 'no']
