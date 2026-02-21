@@ -31,7 +31,7 @@
     DEBIAN_FRONTEND: noninteractive
 
 - name: Enable IPv4 forwarding
-  community.general.sysctl: #Problem with recognising in lint
+  sysctl:
     name: net.ipv4.ip_forward
     value: '1'
     state: present

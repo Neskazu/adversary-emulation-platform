@@ -54,6 +54,10 @@ jobs:
         run: |
           python tools/validate_repo.py
 
+      - name: Install Ansible collections
+        run: |
+          ansible-galaxy collection install community.general
+
       - name: Ansible lint
         run: |
           ansible-lint ansible/site.yml
