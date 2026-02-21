@@ -2,5 +2,5 @@ requests
 PyYAML
 flake8<7
 yamllint
-ansible-lint<7
+ansible-lint>=26.1.1,<27
 bandit<2
